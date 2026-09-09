@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework import serializers, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegistrationSerializer, LoginSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -38,7 +38,7 @@ class CustomLoginView(ObtainAuthToken):
 
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data) # self.serializer_class(data=request.data)
+        serializer = LoginSerializer(data=request.data)
 
 
         data = {}
@@ -61,4 +61,11 @@ class CustomLoginView(ObtainAuthToken):
                 "errors": serializer.errors
             }
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()  # Token löschen
+        return Response({"detail": "Logout successful. Token was deleted."}, status=status.HTTP_200_OK)
 
