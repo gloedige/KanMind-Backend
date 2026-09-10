@@ -5,27 +5,24 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import RegistrationSerializer, LoginSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from auth_app.utils import create_user_object
 
 class RegisterView(APIView):
+    """
+    Handles user registration.
+
+    Methods:
+        post(self, request): Handles POST requests for user registration.
+        check_and_save(self, serializer): Validates and saves the user, returning a response with the token and user details.
     permission_classes = [AllowAny]
 
+    """
+    permission_classes = [AllowAny]
     def post(self, request):
-        # raise Exception("Test 500 error")  # This will raise a 500 error for testing purposes;
-
         serializer = RegistrationSerializer(data=request.data)
 
         try:
-            serializer.is_valid(raise_exception=True)
-            save_account = serializer.save()
-            token, created = Token.objects.get_or_create(user=save_account)
-            data = {
-                'token': token.key,
-                'fullname': save_account.username,  # Assuming you want to return the username as fullname
-                'email': save_account.email,
-                'user_id': save_account.id,
-            }
-            return Response(data, status=status.HTTP_201_CREATED)
-        
+            return self.check_and_save(serializer)
         except serializers.ValidationError as e:
             return Response({'error': e.detail}, status=status.HTTP_400_BAD_REQUEST)
                
@@ -33,28 +30,29 @@ class RegisterView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
-class CustomLoginView(ObtainAuthToken):
-    permission_classes = [AllowAny]
+    def check_and_save(self, serializer):
+            serializer.is_valid(raise_exception=True)
+            save_account = serializer.save()
+            data = create_user_object(save_account)
+            return Response(data, status=status.HTTP_201_CREATED)
+        
 
+class CustomLoginView(ObtainAuthToken):
+    """
+    Handles user login.
+
+    Methods:
+        post(self, request): Handles POST requests for user login.
+    """
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
 
-
         data = {}
         if serializer.is_valid():
             user = serializer.validated_data['user']
-
-
-            token, created = Token.objects.get_or_create(user=user)
-            data =   {
-                    "token": token.key,
-                    "fullname": user.username,
-                    "email": user.email,
-                    "user_id": user.id,
-            }
-
-
+            data = create_user_object(user)
             return Response(data, status=status.HTTP_201_CREATED)
         else:
             data = {
@@ -62,7 +60,14 @@ class CustomLoginView(ObtainAuthToken):
             }
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LogoutView(APIView):
+    """
+    Handles user logout.
+
+    Methods:
+        post(self, request): Handles POST requests for user logout.
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
