@@ -3,6 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Debug files
+launch.json
+
 # C extensions
 *.so
 
