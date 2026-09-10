@@ -1,6 +1,10 @@
-from django.urls import path
-from .views import BoardsListView
+from django.urls import path, include
+from .views import BoardsListViewSet
+from rest_framework import routers
+
+router = routers.SimpleRouter()
+router.register(r'boards', BoardsListViewSet, basename='boards')
 
 urlpatterns = [
-    path('', BoardsListView.as_view(), name='boards_list')
+    path('', include(router.urls), name='boards_list')
 ]
