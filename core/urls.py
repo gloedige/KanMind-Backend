@@ -25,4 +25,5 @@ router = routers.SimpleRouter()
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('auth_app.api.urls')),  # Include the auth_app API URLs
+    path('api/', include('kanban_app.api.urls')),  # Include the kanban_app API URLs
 ]
