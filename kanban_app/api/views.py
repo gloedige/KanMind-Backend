@@ -17,4 +17,5 @@ class BoardsListViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Board.objects.filter(Q(owner=user) | Q(members__user=user)).distinct()
+    #TODO Aktuell sind in der Ausgabe nur Ergebnisse vom Owner zu sehen, nicht von den Mitgliedern
             
