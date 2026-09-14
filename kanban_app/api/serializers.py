@@ -17,6 +17,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         return obj.comments.count()
 
+    #TODO: filter due_date output format
     class Meta:
         model = Task
         fields = ['id', 'board', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
