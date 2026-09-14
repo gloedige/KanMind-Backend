@@ -10,3 +10,10 @@ class IsOwnerOrMember(BasePermission):
         is_member = board.members.filter(id=request.user.id).exists()
 
         return is_owner or is_member
+
+class IsMemberOfBoard(BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, board):
+        return board.members.filter(id=request.user.id).exists()

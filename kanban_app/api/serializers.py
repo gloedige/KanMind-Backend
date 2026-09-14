@@ -1,13 +1,28 @@
 from rest_framework import serializers
-from kanban_app.models import Board, Member, Task
-from django.contrib.auth.models import User
+from kanban_app.models import Board, Member, Task, Comment
+from rest_framework import serializers, viewsets
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
         fields = ['id', 'email', 'fullname']
 
-class TaskSerializer(serializers.ModelSerializer):
+
+class TaskListSerializer(serializers.ModelSerializer):
+    comments_count = serializers.SerializerMethodField(read_only=True)
+    reviewer = MemberSerializer(many=False, read_only=True) #TODO: currently null although it should be populated if set
+    assignee = MemberSerializer(many=False, read_only=True) #TODO: currently null although it should be populated if set
+
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    class Meta:
+        model = Task
+        fields = ['id', 'board', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
+
+#TODO :später abschließen
+class TaskDetailSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
 
     def get_comments_count(self, obj):
@@ -15,7 +30,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
+        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date']
+
 
 class BoardListSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(
@@ -52,9 +68,10 @@ class BoardListSerializer(serializers.ModelSerializer):
         model = Board
         fields = ['id', 'title', 'members', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count', 'owner_id']
 
+
 class BoardDetailSerializer(serializers.ModelSerializer):
     members = MemberSerializer(many=True, read_only=True)
-    tasks = TaskSerializer(many=True, read_only=True)
+    tasks = TaskListSerializer(many=True, read_only=True)
     class Meta:
         model = Board
         fields = ['id', 'title', 'owner_id', 'members', 'tasks']
