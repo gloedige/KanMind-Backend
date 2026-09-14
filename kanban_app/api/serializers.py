@@ -5,10 +5,19 @@ from django.contrib.auth.models import User
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = '__all__'
+        fields = ['id', 'email', 'fullname']
 
+class TaskSerializer(serializers.ModelSerializer):
+    comments_count = serializers.SerializerMethodField()
 
-class BoardSerializer(serializers.ModelSerializer):
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+    class Meta:
+        model = Task
+        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
+
+class BoardListSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(
         queryset=Member.objects.all(),
         many=True,
@@ -43,9 +52,9 @@ class BoardSerializer(serializers.ModelSerializer):
         model = Board
         fields = ['id', 'title', 'members', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count', 'owner_id']
 
-
-
-class TaskSerializer(serializers.ModelSerializer):
+class BoardDetailSerializer(serializers.ModelSerializer):
+    members = MemberSerializer(many=True, read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True)
     class Meta:
-        model = Task
-        fields = '__all__'
+        model = Board
+        fields = ['id', 'title', 'owner_id', 'members', 'tasks']

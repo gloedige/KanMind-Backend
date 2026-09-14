@@ -6,5 +6,6 @@ router = routers.SimpleRouter()
 router.register(r'boards', BoardsListViewSet, basename='boards')
 
 urlpatterns = [
-    path('', include(router.urls), name='boards_list')
+    path('', include(router.urls), name='boards_list'),
+    # path('<int:pk>/', include(router.urls)),
 ]

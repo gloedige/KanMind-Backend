@@ -4,11 +4,11 @@ from rest_framework import generics, serializers, viewsets
 from .permissions import IsOwnerOrMember
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board
-from .serializers import BoardSerializer, MemberSerializer, TaskSerializer
+from .serializers import BoardListSerializer, BoardDetailSerializer
 
 class BoardsListViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()
-    serializer_class = BoardSerializer
+    serializer_class = BoardListSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrMember]
     
     def perform_create(self, serializer):
@@ -17,5 +17,20 @@ class BoardsListViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Board.objects.filter(Q(owner=user) | Q(members__user=user)).distinct()
-    #TODO Aktuell sind in der Ausgabe nur Ergebnisse vom Owner zu sehen, nicht von den Mitgliedern
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'update', 'destroy', 'partial_update']:
+            return BoardDetailSerializer
+        return BoardListSerializer
+
+# class BoardsDetailViewSet(viewsets.ModelViewSet):
+#     queryset = Board.objects.all()
+#     serializer_class = BoardDetailSerializer
+#     permission_classes = [IsAuthenticated, IsOwnerOrMember]
+
+#     def perform_create(self, serializer):
+#         serializer.save(owner_id=self.request.user.id)
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         return Board.objects.filter(Q(owner=user) | Q(members__user=user)).distinct()
             
