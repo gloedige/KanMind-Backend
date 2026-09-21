@@ -39,7 +39,7 @@ class Task(models.Model):
     priority = models.CharField(max_length=50, choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='medium')
     assignee = models.ForeignKey(Member, on_delete=models.SET_NULL, blank=True, null=True, related_name='assigned_tasks')
     reviewer = models.ForeignKey(Member, on_delete=models.SET_NULL, blank=True, null=True, related_name='reviewed_tasks')
-    due_date = models.DateTimeField(blank=True, null=True)
+    due_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.title}"
