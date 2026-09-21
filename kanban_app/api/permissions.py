@@ -1,19 +1,38 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import AuthenticationFailed
+from django.http import Http404
 from rest_framework.permissions import SAFE_METHODS
+from kanban_app.models import Board
 
 class IsOwnerOrMember(BasePermission):
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated
+        if not request.user or not request.user.is_authenticated:
+            return False
 
-    def has_object_permission(self, request, view, board):
-        is_owner = bool(board.owner.id == request.user.id)
-        is_member = board.members.filter(id=request.user.id).exists()
+        board_id = view.kwargs.get('pk')
+        if not board_id:
+            return True
+        try:
+            board = Board.objects.get(pk=board_id)
+        except Board.DoesNotExist:
+            return True   # dann kommt 404
 
-        return is_owner or is_member
+        return (
+            board.owner_id == request.user.id
+            or board.members.filter(id=request.user.id).exists()
+        )
 
 class IsMemberOfBoard(BasePermission):
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated
-
-    def has_object_permission(self, request, view, board):
-        return board.members.filter(id=request.user.id).exists()
+        if not request.user or not request.user.is_authenticated:
+            raise AuthenticationFailed("Authentication credentials were not provided.")
+        board_id = request.data.get('board')
+        if board_id is None:
+            return True
+        
+        try:
+            board = Board.objects.get(pk=board_id)
+        except Board.DoesNotExist:
+            raise Http404("Board not found!")
+        
+        return board.members.filter(user_id=request.user.id).exists()
