@@ -25,10 +25,12 @@ class BoardViewSet(viewsets.ModelViewSet):
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
-    permission_classes = [IsAuthenticated, IsMemberOfBoard]
+    permission_classes = [IsMemberOfBoard]
 
     def perform_create(self, serializer):
-        serializer.save()
+        assignee_id = self.request.data.get('assignee_id', None)
+        reviewer_id = self.request.data.get('reviewer_id', None)
+        serializer.save(assignee_id=assignee_id, reviewer_id=reviewer_id)
 
     def get_queryset(self):
         pk = self.kwargs.get('pk')
@@ -37,7 +39,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Task.objects.filter(Q(board=board) | Q(board__members__user=user)).distinct()
 
     def get_serializer_class(self):
-        if self.action in ['retrieve', 'update', 'destroy', 'partial_update']:
+        if self.action in ['update', 'destroy', 'partial_update']:
             return TaskDetailSerializer
         return TaskListSerializer
             
