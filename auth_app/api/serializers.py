@@ -3,6 +3,17 @@ from rest_framework import serializers
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user registration.
+    Validates that the repeated password matches the original password.
+    Ensures that the email is unique.
+    Methods
+    -------
+    save(self, **kwargs)
+        Creates and returns a new user instance after validating the data.
+    validate_fullname(self, value)
+        Validates the fullname field to ensure it contains a space.
+    """
     repeated_password = serializers.CharField(write_only=True)
     fullname = serializers.CharField(required=True)
 
@@ -45,6 +56,14 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return value
 
 class LoginSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user login.
+    Validates that the provided email and password are correct.
+    Methods
+    -------
+    validate(self, data)
+        Validates the email and password combination.
+    """
     email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, required=True)
 
