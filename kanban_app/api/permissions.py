@@ -4,6 +4,14 @@ from django.http import Http404
 from rest_framework.permissions import SAFE_METHODS
 from kanban_app.models import Board, Task
 
+"""
+This module contains custom permission classes and helper functions for the Kanban app.
+Methods
+-------
+check_board_existence_by_board_id(board_id)
+check_board_existence_by_task_id(task_id)
+"""
+
 def check_board_existence_by_board_id(board_id):
         try:
             board = Board.objects.get(pk=board_id)

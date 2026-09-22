@@ -4,7 +4,7 @@ from rest_framework import generics, serializers, viewsets
 from .permissions import IsOwnerOrMember, IsMemberOfBoard
 from rest_framework.permissions import IsAuthenticated
 from ..models import Board, Task
-from .serializers import BoardListSerializer, BoardDetailSerializer, TaskDetailSerializer, TaskListSerializer
+from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer
 
 class BoardViewSet(viewsets.ModelViewSet):
     """
@@ -28,10 +28,14 @@ class BoardViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Board.objects.filter(Q(owner=user) | Q(members__user=user)).distinct()
+    
     def get_serializer_class(self):
-        if self.action in ['retrieve', 'update', 'destroy', 'partial_update']:
+        if self.action in ['retrieve', 'destroy']:
             return BoardDetailSerializer
+        if self.action in ['update', 'partial_update']:
+            return BoardUpdateSerializer
         return BoardListSerializer
+    
 
 class TaskViewSet(viewsets.ModelViewSet):
     """

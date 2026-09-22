@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from kanban_app.models import Board, Member, Task, Comment
+from django.contrib.auth.models import User
 from rest_framework import serializers, viewsets
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -17,6 +18,22 @@ class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
         fields = ['id', 'email', 'fullname']
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the User model.
+    Fields
+    ------
+    id : int
+        The unique identifier of the user.
+    email : str
+        The email address of the user.
+    username : str
+        The username of the user.
+    """
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -199,3 +216,41 @@ class BoardDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ['id', 'title', 'owner_id', 'members', 'tasks']
+
+class BoardUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating the Board model.
+    Fields
+    ------
+    id : int
+        The unique identifier of the board.
+    title : str
+        The title of the board.
+    owner_data : UserSerializer
+        The serialized data of the owner of the board.
+    members_data : list of MemberSerializer
+        The serialized data of the members associated with the board.
+    members : list of MemberSerializer
+        The list of members associated with the board.
+    """
+    owner_data = UserSerializer(source='owner', read_only=True)
+    members_data = MemberSerializer(source='members', many=True, read_only=True)
+
+    members = serializers.PrimaryKeyRelatedField(
+        queryset=Member.objects.all(),
+        many=True,
+        required=True,
+        write_only=True
+    )
+
+    def update(self, instance, validated_data):
+        members = validated_data.pop('members', [])
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.members.set(members)
+        instance.save()
+        return instance
+
+    class Meta:
+        model = Board
+        fields = ['id','title', 'owner_data', 'members_data', 'members']
