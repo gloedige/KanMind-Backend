@@ -240,16 +240,27 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         queryset=Member.objects.all(),
         many=True,
         required=True,
-        write_only=True
+        write_only=True,
+        error_messages={
+            'does_not_exist': 'The specified member does not exist.',
+            'required': 'This field is required.',
+        }
     )
 
+    def validate_members(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one member is required.")
+        return value
+    
     def update(self, instance, validated_data):
-        members = validated_data.pop('members', [])
+        members = validated_data.pop('members', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        instance.members.set(members)
+        if members is not None:
+            instance.members.set(members)
         instance.save()
         return instance
+    
 
     class Meta:
         model = Board
