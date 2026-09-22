@@ -2,7 +2,21 @@ from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from django.http import Http404
 from rest_framework.permissions import SAFE_METHODS
-from kanban_app.models import Board
+from kanban_app.models import Board, Task
+
+def check_board_existence_by_board_id(board_id):
+        try:
+            board = Board.objects.get(pk=board_id)
+        except Board.DoesNotExist:
+            raise Http404("Board not found!")
+        return board
+
+def check_board_existence_by_task_id(task_id):
+    try:
+        board = Task.objects.select_related('board').get(pk=task_id).board
+    except Task.DoesNotExist:
+        raise Http404("Task not found!")
+    return board
 
 class IsOwnerOrMember(BasePermission):
     """
@@ -14,20 +28,21 @@ class IsOwnerOrMember(BasePermission):
     """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
-            return False
+            raise AuthenticationFailed("You must be authenticated to perform this action.")
 
         board_id = view.kwargs.get('pk')
-        if not board_id:
+        if board_id is None:
             return True
-        try:
-            board = Board.objects.get(pk=board_id)
-        except Board.DoesNotExist:
-            return True
+        
+        board = check_board_existence_by_board_id(board_id)
+        return IsOwnerOrMember.is_user_owner_or_member(board, request)
 
-        return (
-            board.owner_id == request.user.id
-            or board.members.filter(id=request.user.id).exists()
-        )
+    def is_user_owner_or_member(board, request):
+        is_owner_or_member = board.owner_id == request.user.id or board.members.filter(user_id=request.user.id).exists()
+        if not is_owner_or_member:
+            raise PermissionDenied("You are not the owner or a member of this board.")
+        return is_owner_or_member
+        
 
 class IsMemberOfBoard(BasePermission):
     """
@@ -46,18 +61,17 @@ class IsMemberOfBoard(BasePermission):
             raise AuthenticationFailed("You must be authenticated to perform this action.")
         
         board_id = request.data.get('board')
-        if board_id is None:
-            return True
+        if board_id is not None:
+            board = check_board_existence_by_board_id(board_id)
+        else:
+            task_id = view.kwargs.get('pk')
+            if task_id is None:
+                return True
+            board = check_board_existence_by_task_id(task_id)
 
-        board = IsMemberOfBoard.check_board_existence(board_id)
         return IsMemberOfBoard.is_user_member(board, request)
 
-    def check_board_existence(board_id):
-        try:
-            board = Board.objects.get(pk=board_id)
-        except Board.DoesNotExist:
-            raise Http404("Board not found!")
-        return board
+    
         
     def is_user_member(board, request):
         is_member = board.members.filter(user_id=request.user.id).exists()
