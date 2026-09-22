@@ -101,13 +101,15 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         Returns the number of comments on the task.
     """
     comments_count = serializers.SerializerMethodField()
+    reviewer = MemberSerializer(many=False, read_only=True)
+    assignee = MemberSerializer(many=False, read_only=True)
 
     def get_comments_count(self, obj):
         return obj.comments.count()
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'due_date', 'comments_count']
+        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
 
 class BoardListSerializer(serializers.ModelSerializer):
     """
