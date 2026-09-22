@@ -5,6 +5,13 @@ from rest_framework.permissions import SAFE_METHODS
 from kanban_app.models import Board
 
 class IsOwnerOrMember(BasePermission):
+    """
+    Permission class to check if the user is the owner or a member of the board.
+    Methods
+    -------
+    has_permission(self, request, view)
+        Checks if the user has permission to access the board based on ownership or membership.
+    """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
@@ -15,7 +22,7 @@ class IsOwnerOrMember(BasePermission):
         try:
             board = Board.objects.get(pk=board_id)
         except Board.DoesNotExist:
-            return True   # dann kommt 404
+            return True
 
         return (
             board.owner_id == request.user.id
@@ -23,6 +30,17 @@ class IsOwnerOrMember(BasePermission):
         )
 
 class IsMemberOfBoard(BasePermission):
+    """
+    Permission class to check if the user is a member of the board.
+    Methods
+    -------
+    has_permission(self, request, view)
+        Checks if the user has permission to access the board based on membership.
+    check_board_existence(board_id)
+        Checks if the board with the given ID exists and returns it.
+    is_user_member(board, request)
+        Checks if the user is a member of the given board.
+    """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             raise AuthenticationFailed("You must be authenticated to perform this action.")

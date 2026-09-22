@@ -8,4 +8,5 @@ router.register(r'tasks', TaskViewSet, basename='tasks')
 
 urlpatterns = [
     path('', include(router.urls), name='boards_list'),
+    path('', include(router.urls), name='tasks_list'),
 ]
