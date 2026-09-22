@@ -20,7 +20,7 @@ class BoardViewSet(viewsets.ModelViewSet):
     """
     queryset = Board.objects.all()
     serializer_class = BoardListSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrMember]
+    permission_classes = [IsOwnerOrMember]
     
     def perform_create(self, serializer):
         serializer.save(owner_id=self.request.user.id)
@@ -54,10 +54,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save(assignee_id=assignee_id, reviewer_id=reviewer_id)
 
     def get_queryset(self):
-        pk = self.kwargs.get('pk')
-        board = Board.objects.get(pk=pk)
         user = self.request.user
-        return Task.objects.filter(Q(board=board) | Q(board__members__user=user)).distinct()
+        return Task.objects.filter(
+            Q(board__owner=user) | Q(board__members__user=user)
+        ).distinct()
 
     def get_serializer_class(self):
         if self.action in ['update', 'destroy', 'partial_update']:
