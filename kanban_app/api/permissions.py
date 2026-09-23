@@ -86,3 +86,19 @@ class IsMemberOfBoard(BasePermission):
         if not is_member:
             raise PermissionDenied("You are not a member of this board.")
         return is_member
+
+class IsOwnerForDestroy(BasePermission):
+     """
+     Permission class to check if the user is the owner of the board for destroy action.
+     Methods
+     -------
+     has_object_permission(self, request, view, obj)
+         Checks if the user has permission to delete the board based on ownership.
+     """
+     def has_object_permission(self, request, view, obj):
+        if view.action == 'destroy':
+            if obj.owner_id != request.user.id:
+                raise PermissionDenied("You are not the owner of this board.")
+            return obj.owner_id == request.user.id
+
+        return True
