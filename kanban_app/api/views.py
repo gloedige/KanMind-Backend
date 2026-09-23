@@ -49,6 +49,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         - perform_create(self, serializer): Sets the assignee and reviewer of the task upon creation.
         - get_queryset(self): Returns the queryset of tasks for the specified board and user.
         - get_serializer_class(self): Returns the appropriate serializer class based on the action.
+        - check_is_member_of_board(self): Checks if the assignee and reviewer are members of the board and raises a ValidationError if not.
     """
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
@@ -61,14 +62,27 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Task.objects.filter(
-            Q(board__owner=user) | Q(board__members__user=user)
-        ).distinct()
+        self.check_is_member_of_board()
+        return Task.objects.filter(Q(board__owner=user) | Q(board__members__user=user)).distinct()
 
     def get_serializer_class(self):
-        if self.action in ['update', 'destroy', 'partial_update']:
+        if self.action in ['destroy', 'partial_update']:
             return TaskDetailSerializer
         return TaskListSerializer
+
+    def check_is_member_of_board(self):
+        assignee_id = self.request.data.get('assignee_id', None)
+        reviewer_id = self.request.data.get('reviewer_id', None)
+        task_id = self.kwargs.get('pk', None)
+
+        if task_id:
+            task = Task.objects.get(pk=task_id)
+            board = task.board
+            if board:
+                if assignee_id is not None and not board.members.filter(id=assignee_id).exists():
+                    raise serializers.ValidationError({"error": "Assignee must be a member of the board."})
+                if reviewer_id is not None and not board.members.filter(id=reviewer_id).exists():
+                    raise serializers.ValidationError({"error": "Reviewer must be a member of the board."})
 
 class EmailViewSet(viewsets.ModelViewSet):
     """

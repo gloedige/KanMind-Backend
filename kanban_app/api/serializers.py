@@ -74,8 +74,8 @@ class TaskListSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField(read_only=True)
     reviewer = MemberSerializer(many=False, read_only=True)
     assignee = MemberSerializer(many=False, read_only=True)
-    reviewer_id = serializers.PrimaryKeyRelatedField(queryset=Member.objects.all(), required=False, allow_null=True, write_only=True)
-    assignee_id = serializers.PrimaryKeyRelatedField(queryset=Member.objects.all(), required=False, allow_null=True, write_only=True)
+    reviewer_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    assignee_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     due_date = serializers.DateField(format="%Y-%m-%d", required=False)
 
     def get_comments_count(self, obj):
@@ -118,16 +118,29 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     get_comments_count(self, obj)
         Returns the number of comments on the task.
     """
-    comments_count = serializers.SerializerMethodField()
     reviewer = MemberSerializer(many=False, read_only=True)
     assignee = MemberSerializer(many=False, read_only=True)
+    reviewer_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    assignee_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
 
     def get_comments_count(self, obj):
         return obj.comments.count()
 
+    def update(self, instance, validated_data):
+        new_assignee_id = validated_data.pop('assignee_id', None)
+        new_reviewer_id = validated_data.pop('reviewer_id', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if new_assignee_id is not None:
+            instance.assignee_id = new_assignee_id
+        if new_reviewer_id is not None:
+            instance.reviewer_id = new_reviewer_id
+        instance.save()
+        return instance
+
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'comments_count']
+        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'due_date']
 
 class BoardListSerializer(serializers.ModelSerializer):
     """
@@ -264,7 +277,6 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
     
 
     class Meta:
-        model = Board
         model = Board
         fields = ['id','title', 'owner_data', 'members_data', 'members']
 
