@@ -1,10 +1,12 @@
 
+import email
+from django.core.validators import validate_email
 from django.db.models import Q
 from rest_framework import generics, serializers, viewsets
-from .permissions import IsOwnerOrMember, IsMemberOfBoard
-from rest_framework.permissions import IsAuthenticated
-from ..models import Board, Task
-from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer
+from .permissions import IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
+from rest_framework.permissions import Http404, IsAuthenticated
+from ..models import Board, Task, User
+from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer
 
 class BoardViewSet(viewsets.ModelViewSet):
     """
@@ -20,7 +22,7 @@ class BoardViewSet(viewsets.ModelViewSet):
     """
     queryset = Board.objects.all()
     serializer_class = BoardListSerializer
-    permission_classes = [IsOwnerOrMember]
+    permission_classes = [IsOwnerOrMember, IsOwnerForDestroy]
     
     def perform_create(self, serializer):
         serializer.save(owner_id=self.request.user.id)
@@ -67,4 +69,39 @@ class TaskViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'destroy', 'partial_update']:
             return TaskDetailSerializer
         return TaskListSerializer
+
+class EmailViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing emails.
+    Provides CRUD operations for emails.
+    Permissions:
+        - IsAuthenticated: User must be authenticated.
+    Methods:
+        - get_queryset(self): Returns the queryset of users filtered by the validated email address.
+        - validate_email_address(self, emailToCheck): Validates the provided email address and raises a ValidationError if it is invalid.
+    """
+    queryset = User.objects.all()
+    serializer_class = EmailListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        email = self.request.query_params.get('email', None)
+        validated_email = None
+        filtered_email = None
+        if email:
+            validated_email = self.validate_email_address(email)
+        
+        filtered_email = User.objects.filter(email=validated_email)
+        if not filtered_email.exists():
+            raise Http404("Email not found.")
+        return filtered_email
+
+    def validate_email_address(self, emailToCheck):
+        if emailToCheck is None or emailToCheck.strip() == '':
+            raise serializers.ValidationError("Email is required.")
+        try:
+            validate_email(emailToCheck)
+        except Exception:
+            raise serializers.ValidationError("Invalid email address.")
+        return emailToCheck
             

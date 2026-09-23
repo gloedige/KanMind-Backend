@@ -2,6 +2,7 @@ from rest_framework import serializers
 from kanban_app.models import Board, Member, Task, Comment
 from django.contrib.auth.models import User
 from rest_framework import serializers, viewsets
+import email
 
 class MemberSerializer(serializers.ModelSerializer):
     """
@@ -264,4 +265,27 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
+        model = Board
         fields = ['id','title', 'owner_data', 'members_data', 'members']
+
+
+class EmailListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the User model used in email list views.
+    Fields
+    ------
+    id : int
+        The unique identifier of the user.
+    email : str
+        The email address of the user.
+    fullname : str
+        The full name of the user.
+    """
+    fullname = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'fullname']
+
+    def get_fullname(self, obj):
+        return obj.get_username()
