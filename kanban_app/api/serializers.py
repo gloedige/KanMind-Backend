@@ -81,6 +81,22 @@ class TaskListSerializer(serializers.ModelSerializer):
     owner_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     due_date = serializers.DateField(format="%Y-%m-%d", required=False)
 
+    def validate_assignee_id(self, value):
+        board_id = self.context['request'].data.get('board', None)
+        if value is not None and board_id is not None:
+            board = Board.objects.get(pk=board_id)
+            if not board.members.filter(id=value).exists():
+                raise serializers.ValidationError("Assignee must be a valid member of the board.")
+        return value
+
+    def validate_reviewer_id(self, value):
+        board_id = self.context['request'].data.get('board', None)
+        if value is not None and board_id is not None:
+            board = Board.objects.get(pk=board_id)
+            if not board.members.filter(id=value).exists():
+                raise serializers.ValidationError("Reviewer must be a valid member of the board.")
+        return value
+
     def get_comments_count(self, obj):
         return obj.comments.count()
 
@@ -128,6 +144,16 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     reviewer_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     assignee_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     owner_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+
+    def validate_assignee_id(self, value):
+        if value is not None and not Task.objects.get(pk=self.instance.pk).board.members.filter(id=value).exists():
+            raise serializers.ValidationError("Assignee must be a valid member of the board.")
+        return value
+
+    def validate_reviewer_id(self, value):
+        if value is not None and not Task.objects.get(pk=self.instance.pk).board.members.filter(id=value).exists():
+            raise serializers.ValidationError("Reviewer must be a valid member of the board.")
+        return value
 
     def get_comments_count(self, obj):
         return obj.comments.count()
