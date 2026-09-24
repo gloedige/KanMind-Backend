@@ -1,10 +1,12 @@
 
 import email
-from django.core.validators import validate_email
+from rest_framework import routers, viewsets
+from rest_framework.response import Response
 from django.db.models import Q
 from rest_framework import generics, serializers, viewsets
-from .permissions import IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
-from rest_framework.permissions import Http404, IsAuthenticated
+from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
+from rest_framework.permissions import IsAuthenticated, Http404
+from rest_framework.exceptions import ValidationError
 from ..models import Board, Task, User
 from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer
 
@@ -53,7 +55,16 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
-    permission_classes = [IsMemberOfBoard, IsOwnerForDestroy]
+    permission_classes = [IsMemberOfBoard, IsOwnerOfTaskOrBoardForDestroy]
+
+    def initial(self, request, *args, **kwargs):
+        if self.action in ['destroy', 'partial_update']:
+            task_id = self.kwargs.get('pk', None)
+            if not self.checkTaskIdIsValid(task_id):
+                raise ValidationError({"error": "Invalid task ID."})
+            if not self.checkTaskIdExists(task_id):
+                raise Http404({"error": "Task ID does not exist."})
+        super().initial(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         assignee_id = self.request.data.get('assignee_id', None)
@@ -63,7 +74,6 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        self.check_is_member_of_board()
         return Task.objects.filter(Q(board__owner=user) | Q(board__members__user=user)).distinct()
 
     def get_serializer_class(self):
@@ -71,19 +81,14 @@ class TaskViewSet(viewsets.ModelViewSet):
             return TaskDetailSerializer
         return TaskListSerializer
 
-    def check_is_member_of_board(self):
-        assignee_id = self.request.data.get('assignee_id', None)
-        reviewer_id = self.request.data.get('reviewer_id', None)
-        task_id = self.kwargs.get('pk', None)
+    def checkTaskIdIsValid(self, task_id):
+        task_id_not_none = task_id is not None
+        task_id_is_digit = str(task_id).isdigit()
+        return task_id_not_none and task_id_is_digit
 
-        if task_id:
-            task = Task.objects.get(pk=task_id)
-            board = task.board
-            if board:
-                if assignee_id is not None and not board.members.filter(id=assignee_id).exists():
-                    raise serializers.ValidationError({"error": "Assignee must be a member of the board."})
-                if reviewer_id is not None and not board.members.filter(id=reviewer_id).exists():
-                    raise serializers.ValidationError({"error": "Reviewer must be a member of the board."})
+    def checkTaskIdExists(self, task_id):
+        return Task.objects.filter(pk=task_id).exists()
+    
 
 class EmailViewSet(viewsets.ModelViewSet):
     """
