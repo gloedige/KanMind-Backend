@@ -53,12 +53,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
-    permission_classes = [IsMemberOfBoard]
+    permission_classes = [IsMemberOfBoard, IsOwnerForDestroy]
 
     def perform_create(self, serializer):
         assignee_id = self.request.data.get('assignee_id', None)
         reviewer_id = self.request.data.get('reviewer_id', None)
-        serializer.save(assignee_id=assignee_id, reviewer_id=reviewer_id)
+        task_owner_id = self.request.user.id
+        serializer.save(assignee_id=assignee_id, reviewer_id=reviewer_id, owner_id=task_owner_id)
 
     def get_queryset(self):
         user = self.request.user
