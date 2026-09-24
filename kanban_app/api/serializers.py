@@ -62,6 +62,8 @@ class TaskListSerializer(serializers.ModelSerializer):
         The member reviewing the task.
     reviewer_id : int
         The ID of the member reviewing the task.
+    owner_id : int
+        The ID of the user who owns the task.
     due_date : str
         The due date of the task in YYYY-MM-DD format.
     comments_count : int
@@ -76,6 +78,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     assignee = MemberSerializer(many=False, read_only=True)
     reviewer_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     assignee_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    owner_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     due_date = serializers.DateField(format="%Y-%m-%d", required=False)
 
     def get_comments_count(self, obj):
@@ -83,7 +86,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ['id', 'board', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'due_date', 'comments_count']
+        fields = ['id', 'board', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'owner_id', 'due_date', 'comments_count']
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):
@@ -109,6 +112,8 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         The member reviewing the task.
     reviewer_id : int
         The ID of the member reviewing the task.
+    owner_id : int
+            The ID of the user who owns the task.
     due_date : str
         The due date of the task in YYYY-MM-DD format.
     comments_count : int
@@ -122,6 +127,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     assignee = MemberSerializer(many=False, read_only=True)
     reviewer_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     assignee_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    owner_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
 
     def get_comments_count(self, obj):
         return obj.comments.count()
@@ -140,7 +146,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'due_date']
+        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'owner_id', 'due_date']
 
 class BoardListSerializer(serializers.ModelSerializer):
     """
