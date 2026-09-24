@@ -79,8 +79,6 @@ class IsMemberOfBoard(BasePermission):
 
         return IsMemberOfBoard.is_user_member(board, request)
 
-    
-        
     def is_user_member(board, request):
         is_member = board.members.filter(user_id=request.user.id).exists()
         if not is_member:
@@ -100,5 +98,21 @@ class IsOwnerForDestroy(BasePermission):
             if obj.owner_id != request.user.id:
                 raise PermissionDenied("You are not the owner of this board.")
             return obj.owner_id == request.user.id
+
+        return True
+
+class IsOwnerOfTaskOrBoardForDestroy(BasePermission):
+    """
+    Permission class to check if the user is the owner of the task or board for destroy action.
+    Methods
+    -------
+    has_object_permission(self, request, view, obj)
+        Checks if the user has permission to delete the task or board based on ownership.
+    """
+    def has_object_permission(self, request, view, obj):
+        if view.action == 'destroy':
+            if hasattr(obj, 'owner_id') and obj.owner_id != request.user.id:
+                raise PermissionDenied("You are not the owner of this object.")
+            return hasattr(obj, 'owner_id') and obj.owner_id == request.user.id
 
         return True
