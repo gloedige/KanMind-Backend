@@ -333,3 +333,9 @@ class EmailListSerializer(serializers.ModelSerializer):
 
     def get_fullname(self, obj):
         return obj.get_username()
+
+
+class CommentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'created_at', 'author', 'content']
