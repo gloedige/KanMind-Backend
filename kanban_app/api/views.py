@@ -157,4 +157,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         if task_id:
             return Comment.objects.filter(task_id=task_id)
         return Comment.objects.all()
+
+    def perform_create(self, serializer):
+        author_name = self.request.user.username
+        task_id = self.kwargs.get('task_pk', None)
+        serializer.save(author=author_name, task_id=task_id)
             

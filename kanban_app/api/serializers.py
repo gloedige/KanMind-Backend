@@ -336,6 +336,11 @@ class EmailListSerializer(serializers.ModelSerializer):
 
 
 class CommentListSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(read_only=True)
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", required=False)
+
     class Meta:
         model = Comment
         fields = ['id', 'created_at', 'author', 'content']
+
+    
