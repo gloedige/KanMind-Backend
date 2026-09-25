@@ -1,63 +1,63 @@
 # KanMind Backend
 
-## Überblick
-Backend-Service für eine Kanban-Anwendung auf Basis von Django REST Framework.
+## Overview
+Backend service for a Kanban application built with Django REST Framework.
 
-## Tech-Stack
+## Tech Stack
 - Python 3.12+
 - Django 6.1.1
 - Django REST Framework 3.18.1
 - drf-nested-routers 0.95.3
-- SQLite (Standard in der lokalen Entwicklung)
+- SQLite (default for local development)
 
-## Voraussetzungen
-- Python 3.12 oder höher
+## Prerequisites
+- Python 3.12 or higher
 - `pip`
-- Virtuelle Umgebung (empfohlen)
+- Virtual environment (recommended)
 
 ## Installation
 ```bash
-git clone <repo-url>
+git clone YOUR_REPO_URL
 cd KanMind-Backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Konfiguration
-Aktuelle Entwicklungs-Defaults:
-- Datenbank: SQLite (`db.sqlite3`)
-- Authentifizierung: TokenAuth (`rest_framework.authentication.TokenAuthentication`)
-- Standard-Permissions: `IsAuthenticated`
+## Configuration
+Current development defaults:
+- Database: SQLite (`db.sqlite3`)
+- Authentication: TokenAuth (`rest_framework.authentication.TokenAuthentication`)
+- Default permissions: `IsAuthenticated`
 
-Hinweis: `core/settings.py` enthält eine hartkodierte Development-`SECRET_KEY` und `DEBUG=True`.
-Für Produktion eigene Umgebungsvariablen und sichere Settings verwenden.
+Note: `core/settings.py` currently contains a hardcoded development `SECRET_KEY` and `DEBUG=True`.
+For production, use environment variables and secure settings.
 
-## Datenbank initialisieren
+## Initialize the Database
 ```bash
 python manage.py migrate
 ```
 
-## Entwicklungsserver starten
+## Start the Development Server
 ```bash
 python manage.py runserver
 ```
 
-API-Basis-URL lokal: `http://127.0.0.1:8000/api/`
+Local API base URL: `http://127.0.0.1:8000/api/`
 
-## Authentifizierung
-Nach erfolgreicher Registrierung oder Anmeldung liefert die API ein Token.
-Dieses Token in Requests setzen:
+## Authentication
+After successful registration or login, the API returns a token.
+Use this token in request headers:
 
 ```http
 Authorization: Token YOUR_TOKEN
 ```
 
-## API-Endpunkte
+## API Endpoints
 ### Auth (`/api/`)
-- `POST /registration/` – Benutzer registrieren
-- `POST /login/` – Benutzer anmelden
-- `POST /logout/` – Benutzer abmelden (Token wird gelöscht)
+- `POST /registration/` – Register a user
+- `POST /login/` – Log in a user
+- `POST /logout/` – Log out a user (token is deleted)
 
 ### Kanban (`/api/`)
 - `GET|POST /boards/`
@@ -75,15 +75,15 @@ Authorization: Token YOUR_TOKEN
 python manage.py test
 ```
 
-## Projektstruktur
+## Project Structure
 ```text
 .
-├── auth_app/        # Registrierung, Login, Logout
-├── kanban_app/      # Boards, Tasks, Kommentare, Berechtigungen
-├── core/            # Django-Projektkonfiguration (Settings/URLs)
+├── auth_app/        # Registration, login, logout
+├── kanban_app/      # Boards, tasks, comments, permissions
+├── core/            # Django project configuration (settings/URLs)
 ├── manage.py
 └── requirements.txt
 ```
 
-## Lizenz
-Siehe `LICENSE`.
+## License
+See `LICENSE`.
