@@ -17,7 +17,8 @@ Backend-Service für eine Kanban-Anwendung auf Basis von Django REST Framework.
 
 ## Installation
 ```bash
-cd /home/runner/work/KanMind-Backend/KanMind-Backend
+git clone <repo-url>
+cd KanMind-Backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
