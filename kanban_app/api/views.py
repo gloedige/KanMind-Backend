@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated, Http404
 from rest_framework.exceptions import ValidationError
 from ..models import Board, Comment, Task, User, Member
 from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer, CommentListSerializer
-from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists
+from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists, checkCommentIdIsValid, checkCommentIdExists
 
 
 class BoardViewSet(viewsets.ModelViewSet):
@@ -28,7 +28,13 @@ class BoardViewSet(viewsets.ModelViewSet):
     """
     queryset = Board.objects.all()
     serializer_class = BoardListSerializer
-    permission_classes = [IsOwnerOrMember, IsOwnerForDestroy]
+
+    def get_permissions(self):
+            if self.action == 'destroy':
+                permission_classes = [IsOwnerForDestroy]
+            else:
+                permission_classes = [IsOwnerOrMember]
+            return [permission() for permission in permission_classes]
     
     def perform_create(self, serializer):
         serializer.save(owner_id=self.request.user.id)
@@ -151,15 +157,34 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
     queryset = Comment.objects.all()
     serializer_class = CommentListSerializer
-    permission_classes = [IsMemberOfBoard]
+
+    def get_permissions(self):
+        if self.action == 'destroy':
+            permission_classes = [IsOwnerForDestroy]
+        else:
+            permission_classes = [IsMemberOfBoard]
+        return [permission() for permission in permission_classes]
 
     def initial(self, request, *args, **kwargs):
+        self._validate_task_context()
+        self._validate_comment_context_for_destroy()
+        super().initial(request, *args, **kwargs)
+
+    def _validate_task_context(self):
         self.task_id = self.kwargs.get('task_pk', None)
         if not checkTaskIdIsValid(self, self.task_id):
             raise ValidationError({"error": "Invalid task ID."})
         if not checkTaskIdExists(self, self.task_id):
             raise Http404({"error": "Task ID does not exist."})
-        super().initial(request, *args, **kwargs)
+
+    def _validate_comment_context_for_destroy(self):
+        if self.action != 'destroy':
+            return
+        self.comment_id = self.kwargs.get('pk', None)
+        if not checkCommentIdIsValid(self, self.comment_id):
+            raise ValidationError({"error": "Invalid comment ID."})
+        if not checkCommentIdExists(self, self.comment_id):
+            raise Http404({"error": "Comment ID does not exist."})
 
     def get_queryset(self):
         task_id = self.kwargs.get('task_pk', None)
