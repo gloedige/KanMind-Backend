@@ -16,11 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework import routers
-from auth_app.api.views import RegisterView
-
-router = routers.SimpleRouter()
-# router.register(r'auth', RegisterView, basename='auth')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
