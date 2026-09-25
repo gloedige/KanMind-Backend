@@ -116,7 +116,6 @@ class IsOwnerForDestroy(BasePermission):
                 raise PermissionDenied("You are not the owner of this board.")
             return obj.owner_id == request.user.id
         if hasattr(obj, 'author'):
-            print(f"Author of the board: {obj.author}, Current user: {request.user.username}")
             if obj.author != request.user.username:
                 raise PermissionDenied("You are not the author of this board.")
             return obj.author == request.user.username
