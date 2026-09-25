@@ -1,3 +1,5 @@
+from re import match
+
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from django.http import Http404
@@ -79,13 +81,14 @@ class IsMemberOfBoard(BasePermission):
         board_id = request.data.get('board')
         if board_id is not None:
             return check_board_existence_by_board_id(board_id)
-
-        task_id = view.kwargs.get('pk') 
-        if task_id is None:
-            task_id = view.kwargs.get('task_pk')
-        if task_id is None:
+    
+        if 'task_pk' in view.kwargs and view.kwargs['task_pk'] is not None:
+            task_id = view.kwargs['task_pk']
+        elif 'pk' in view.kwargs and view.kwargs['pk'] is not None:
+            task_id = view.kwargs['pk']
+        else:
             return None
-
+    
         return check_board_existence_by_task_id(task_id)
 
     def is_user_member(self, board, request):
@@ -107,13 +110,18 @@ class IsOwnerForDestroy(BasePermission):
      has_object_permission(self, request, view, obj)
          Checks if the user has permission to delete the board based on ownership.
      """
-     def has_object_permission(self, request, view, obj):
-        if view.action == 'destroy':
+     def has_object_permission(self, request, view, obj):        
+        if hasattr(obj, 'owner_id'):
             if obj.owner_id != request.user.id:
                 raise PermissionDenied("You are not the owner of this board.")
             return obj.owner_id == request.user.id
-
+        if hasattr(obj, 'author'):
+            print(f"Author of the board: {obj.author}, Current user: {request.user.username}")
+            if obj.author != request.user.username:
+                raise PermissionDenied("You are not the author of this board.")
+            return obj.author == request.user.username
         return True
+     
 
 class IsOwnerOfTaskOrBoardForDestroy(BasePermission):
     """
