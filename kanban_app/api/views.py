@@ -152,8 +152,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     Permissions:
         - IsMemberOfBoard: User must be a member of the board associated with the task.
     Methods:
+        - _validate_comment_context_for_destroy(self): Validates the comment context for the destroy action, ensuring the comment ID is valid and exists.
+        - _validate_task_context(self): Validates the task context, ensuring the task ID is valid and exists.
+        - get_permissions(self): Returns the appropriate permission classes based on the action.
+        - initial(self, request, *args, **kwargs): Validates the task and comment context before processing the request.
         - get_queryset(self): Returns the queryset of comments filtered by the task ID.
         - perform_create(self, serializer): Saves a new comment with the author set to the current user and the task ID set to the associated task.
+
     """
     queryset = Comment.objects.all()
     serializer_class = CommentListSerializer

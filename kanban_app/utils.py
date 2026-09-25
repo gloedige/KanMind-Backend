@@ -4,6 +4,8 @@ Utility functions for task validation.
 Functions:
     - checkTaskIdIsValid(self, task_id): Checks if the provided task ID is valid (not None and is a digit).
     - checkTaskIdExists(self, task_id): Checks if a task with the provided ID exists in the database.
+    - checkCommentIdIsValid(self, comment_id): Checks if the provided comment ID is valid (not None and is a digit).
+    - checkCommentIdExists(self, comment_id): Checks if a comment with the provided ID exists in the database.
 """
 
 def checkTaskIdIsValid(self, task_id):
