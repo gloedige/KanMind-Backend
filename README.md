@@ -50,7 +50,7 @@ Nach erfolgreicher Registrierung oder Anmeldung liefert die API ein Token.
 Dieses Token in Requests setzen:
 
 ```http
-Authorization: Token <dein_token>
+Authorization: Token YOUR_TOKEN
 ```
 
 ## API-Endpunkte
@@ -66,7 +66,7 @@ Authorization: Token <dein_token>
 - `GET|PATCH|DELETE /tasks/{id}/`
 - `GET /tasks/assigned-to-me/`
 - `GET /tasks/reviewing/`
-- `GET /email-check/?email=<adresse>`
+- `GET /email-check/?email=user@example.com`
 - `GET|POST /tasks/{task_id}/comments/`
 - `GET|PATCH|DELETE /tasks/{task_id}/comments/{id}/`
 
