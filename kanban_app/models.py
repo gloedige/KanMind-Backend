@@ -3,7 +3,6 @@ from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
 
-
 class Member(models.Model):
     email = models.EmailField(unique=True)
     fullname = models.CharField(max_length=255)
@@ -11,15 +10,6 @@ class Member(models.Model):
 
     def __str__(self):
         return f"{self.fullname}"
-
-class Comment(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(Member, on_delete=models.CASCADE)
-    content = models.TextField()
-    task = models.ForeignKey('Task', on_delete=models.CASCADE, blank=True, null=True, related_name='comments')
-
-    def __str__(self):
-        return f"{self.author.fullname} - {self.content[:20]}"
 
 
 class Board(models.Model):
@@ -44,3 +34,13 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+
+class Comment(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    author = models.CharField(max_length=30)
+    content = models.TextField()
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True, null=True, related_name='comments')
+
+    def __str__(self):
+        return f"{self.author} - {self.content[:20]}"
