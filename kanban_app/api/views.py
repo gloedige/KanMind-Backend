@@ -1,13 +1,15 @@
 
 import email
+from rest_framework.decorators import action
 from rest_framework import routers, viewsets
 from rest_framework.response import Response
 from django.db.models import Q
+from django.core.validators import validate_email
 from rest_framework import generics, serializers, viewsets
 from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
 from rest_framework.permissions import IsAuthenticated, Http404
 from rest_framework.exceptions import ValidationError
-from ..models import Board, Task, User
+from ..models import Board, Task, User, Member
 from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer
 
 class BoardViewSet(viewsets.ModelViewSet):
@@ -51,7 +53,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         - perform_create(self, serializer): Sets the assignee and reviewer of the task upon creation.
         - get_queryset(self): Returns the queryset of tasks for the specified board and user.
         - get_serializer_class(self): Returns the appropriate serializer class based on the action.
-        - check_is_member_of_board(self): Checks if the assignee and reviewer are members of the board and raises a ValidationError if not.
+        - check_is_member_of_board(self): Checks if the assignee is a member of the board and raises a ValidationError if not.
+        - assigned_to_me(self, request, *args, **kwargs): Returns the tasks assigned to the current user.
     """
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
@@ -88,6 +91,23 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def checkTaskIdExists(self, task_id):
         return Task.objects.filter(pk=task_id).exists()
+
+    @action(detail=False, methods=['get'], url_path='assigned-to-me')
+    def assigned_to_me(self, request, *args, **kwargs):
+        member = Member.objects.filter(user_id=request.user.id).first()
+        if member:
+            tasks = Task.objects.filter(Q(assignee_id=member.id)).distinct()
+            return Response(TaskListSerializer(tasks, many=True).data)
+        return Response(TaskListSerializer([], many=True).data)
+
+    @action(detail=False, methods=['get'], url_path='reviewing')
+    def reviewing(self, request, *args, **kwargs):
+        member = Member.objects.filter(user_id=request.user.id).first()
+        if member:
+            tasks = Task.objects.filter(Q(reviewer_id=member.id)).distinct()
+
+            return Response(TaskListSerializer(tasks, many=True).data)
+        return Response(TaskListSerializer([], many=True).data)
     
 
 class EmailViewSet(viewsets.ModelViewSet):
