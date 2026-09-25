@@ -9,8 +9,10 @@ from rest_framework import generics, serializers, viewsets
 from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
 from rest_framework.permissions import IsAuthenticated, Http404
 from rest_framework.exceptions import ValidationError
-from ..models import Board, Task, User, Member
-from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer
+from ..models import Board, Comment, Task, User, Member
+from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer, CommentListSerializer
+from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists
+
 
 class BoardViewSet(viewsets.ModelViewSet):
     """
@@ -63,9 +65,9 @@ class TaskViewSet(viewsets.ModelViewSet):
     def initial(self, request, *args, **kwargs):
         if self.action in ['destroy', 'partial_update']:
             task_id = self.kwargs.get('pk', None)
-            if not self.checkTaskIdIsValid(task_id):
+            if not checkTaskIdIsValid(self, task_id):
                 raise ValidationError({"error": "Invalid task ID."})
-            if not self.checkTaskIdExists(task_id):
+            if not checkTaskIdExists(self, task_id):
                 raise Http404({"error": "Task ID does not exist."})
         super().initial(request, *args, **kwargs)
 
@@ -83,14 +85,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         if self.action in ['destroy', 'partial_update']:
             return TaskDetailSerializer
         return TaskListSerializer
-
-    def checkTaskIdIsValid(self, task_id):
-        task_id_not_none = task_id is not None
-        task_id_is_digit = str(task_id).isdigit()
-        return task_id_not_none and task_id_is_digit
-
-    def checkTaskIdExists(self, task_id):
-        return Task.objects.filter(pk=task_id).exists()
 
     @action(detail=False, methods=['get'], url_path='assigned-to-me')
     def assigned_to_me(self, request, *args, **kwargs):
@@ -144,4 +138,23 @@ class EmailViewSet(viewsets.ModelViewSet):
         except Exception:
             raise serializers.ValidationError("Invalid email address.")
         return emailToCheck
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentListSerializer
+    permission_classes = [IsMemberOfBoard]
+
+    def initial(self, request, *args, **kwargs):
+        self.task_id = self.kwargs.get('task_pk', None)
+        if not checkTaskIdIsValid(self, self.task_id):
+            raise ValidationError({"error": "Invalid task ID."})
+        if not checkTaskIdExists(self, self.task_id):
+            raise Http404({"error": "Task ID does not exist."})
+        super().initial(request, *args, **kwargs)
+
+    def get_queryset(self):
+        task_id = self.kwargs.get('task_pk', None)
+        if task_id:
+            return Comment.objects.filter(task_id=task_id)
+        return Comment.objects.all()
             
