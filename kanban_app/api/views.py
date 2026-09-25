@@ -1,11 +1,9 @@
-
-import email
 from rest_framework.decorators import action
 from rest_framework import routers, viewsets
 from rest_framework.response import Response
 from django.db.models import Q
 from django.core.validators import validate_email
-from rest_framework import generics, serializers, viewsets
+from rest_framework import serializers, viewsets
 from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
 from rest_framework.permissions import IsAuthenticated, Http404
 from rest_framework.exceptions import ValidationError

@@ -1,5 +1,3 @@
-from re import match
-
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from django.http import Http404

@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from kanban_app.models import Board, Member, Task, Comment
 from django.contrib.auth.models import User
-from rest_framework import serializers, viewsets
-import email
 
 class MemberSerializer(serializers.ModelSerializer):
     """
