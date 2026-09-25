@@ -29,9 +29,9 @@ class BoardViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
             if self.action == 'destroy':
-                permission_classes = [IsOwnerForDestroy]
+                permission_classes = [IsAuthenticated, IsOwnerForDestroy]
             else:
-                permission_classes = [IsOwnerOrMember]
+                permission_classes = [IsAuthenticated, IsOwnerOrMember]
             return [permission() for permission in permission_classes]
     
     def perform_create(self, serializer):
@@ -64,7 +64,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
-    permission_classes = [IsMemberOfBoard, IsOwnerOfTaskOrBoardForDestroy]
+    permission_classes = [IsAuthenticated, IsMemberOfBoard, IsOwnerOfTaskOrBoardForDestroy]
 
     def initial(self, request, *args, **kwargs):
         if self.action in ['destroy', 'partial_update']:
@@ -163,9 +163,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'destroy':
-            permission_classes = [IsOwnerForDestroy]
+            permission_classes = [IsAuthenticated, IsOwnerForDestroy]
         else:
-            permission_classes = [IsMemberOfBoard]
+            permission_classes = [IsAuthenticated, IsMemberOfBoard]
         return [permission() for permission in permission_classes]
 
     def initial(self, request, *args, **kwargs):
