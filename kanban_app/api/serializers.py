@@ -336,6 +336,19 @@ class EmailListSerializer(serializers.ModelSerializer):
 
 
 class CommentListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Comment model used in comment list views.
+    Fields
+    ------
+    id : int
+        The unique identifier of the comment.
+    created_at : datetime
+        The timestamp when the comment was created.
+    author : str
+        The username of the author of the comment.
+    content : str
+        The content of the comment.
+    """
     author = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", required=False)
 

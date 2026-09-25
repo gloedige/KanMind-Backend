@@ -33,6 +33,8 @@ class IsOwnerOrMember(BasePermission):
     -------
     has_permission(self, request, view)
         Checks if the user has permission to access the board based on ownership or membership.
+    is_user_owner_or_member(board, request)
+        Checks if the user is the owner or a member of the given board.
     """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
@@ -96,6 +98,11 @@ class IsOwnerForDestroy(BasePermission):
      """
      Permission class to check if the user is the owner of the board for destroy action.
      Methods
+     -------
+     has_permission(self, request, view)
+         Checks if the user has permission to destroy the board based on ownership.
+     is_user_owner(board, request)
+         Checks if the user is the owner of the given board.
      -------
      has_object_permission(self, request, view, obj)
          Checks if the user has permission to delete the board based on ownership.

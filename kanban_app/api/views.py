@@ -140,6 +140,15 @@ class EmailViewSet(viewsets.ModelViewSet):
         return emailToCheck
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing comments.
+    Provides CRUD operations for comments associated with tasks.
+    Permissions:
+        - IsMemberOfBoard: User must be a member of the board associated with the task.
+    Methods:
+        - get_queryset(self): Returns the queryset of comments filtered by the task ID.
+        - perform_create(self, serializer): Saves a new comment with the author set to the current user and the task ID set to the associated task.
+    """
     queryset = Comment.objects.all()
     serializer_class = CommentListSerializer
     permission_classes = [IsMemberOfBoard]
