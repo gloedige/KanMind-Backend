@@ -68,18 +68,25 @@ class IsMemberOfBoard(BasePermission):
         if not request.user or not request.user.is_authenticated:
             raise AuthenticationFailed("You must be authenticated to perform this action.")
         
+        board = self.get_board_from_view(request, view)
+        if board is None:
+            return True
+        return self.is_user_member(board, request)
+
+    def get_board_from_view(self, request, view):
         board_id = request.data.get('board')
         if board_id is not None:
-            board = check_board_existence_by_board_id(board_id)
-        else:
-            task_id = view.kwargs.get('pk')
-            if task_id is None:
-                return True
-            board = check_board_existence_by_task_id(task_id)
+            return check_board_existence_by_board_id(board_id)
 
-        return IsMemberOfBoard.is_user_member(board, request)
+        task_id = view.kwargs.get('pk') 
+        if task_id is None:
+            task_id = view.kwargs.get('task_pk')
+        if task_id is None:
+            return None
 
-    def is_user_member(board, request):
+        return check_board_existence_by_task_id(task_id)
+
+    def is_user_member(self, board, request):
         is_member = board.members.filter(user_id=request.user.id).exists()
         if not is_member:
             raise PermissionDenied("You are not a member of this board.")
