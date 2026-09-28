@@ -1,12 +1,13 @@
 from rest_framework.decorators import action
 from rest_framework import routers, viewsets
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
 from django.db.models import Q
 from django.core.validators import validate_email
+from django.http import Http404
 from rest_framework import serializers, viewsets
 from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
-from rest_framework.permissions import IsAuthenticated, Http404
-from rest_framework.exceptions import ValidationError
 from ..models import Board, Comment, Task, User, Member
 from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer, CommentListSerializer
 from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists, checkCommentIdIsValid, checkCommentIdExists
@@ -127,7 +128,7 @@ class EmailViewSet(viewsets.ModelViewSet):
         validated_email = None
         filtered_email = None
         if email:
-            validated_email = self.validate_email_address(email)
+            validated_email = self.validate_email_address(email).lower()
         
         filtered_email = User.objects.filter(email=validated_email)
         if not filtered_email.exists():
