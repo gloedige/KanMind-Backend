@@ -53,7 +53,7 @@ class CustomLoginView(ObtainAuthToken):
         if serializer.is_valid():
             user = serializer.validated_data['user']
             data = create_user_object(user)
-            return Response(data, status=status.HTTP_201_CREATED)
+            return Response(data, status=status.HTTP_200_OK)
         else:
             data = {
                 "errors": serializer.errors
