@@ -210,7 +210,11 @@ class BoardListSerializer(serializers.ModelSerializer):
         queryset=User.objects.all(),
         many=True,
         required=True,
-        write_only=True
+        write_only=True,
+        error_messages={
+                    'does_not_exist': 'At least one of the specified members does not exist.',
+                    'required': 'This field is required.',
+                }
     )
    
     member_count = serializers.SerializerMethodField()
@@ -220,18 +224,21 @@ class BoardListSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         creator = self.context['request'].user
-        user_list = validated_data.pop('members', [])
-        member_list = self.createMemberFromUserList(user_list)
+        members_data = validated_data.pop('members', [])
         board = Board.objects.create(owner_id=creator.id, **validated_data)
-        board.members.set(member_list)
+
+        if members_data:
+            board_members = [
+                Member(user=member_user, board=board)
+                for member_user in members_data
+            ]
+            Member.objects.bulk_create(board_members)
         return board
 
-    def createMemberFromUserList(self, user_list):
-        member_list = []
-        for user in user_list:
-            member, created = Member.objects.get_or_create(user=user, email=user.email, fullname=user.username)
-            member_list.append(member)
-        return member_list
+    def validate_members(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one member must be specified.")
+        return value
 
     def get_member_count(self, obj):
         return obj.members.count()
@@ -297,7 +304,7 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         required=True,
         write_only=True,
         error_messages={
-            'does_not_exist': 'The specified member does not exist.',
+            'does_not_exist': 'At least one of the specified members does not exist.',
             'required': 'This field is required.',
         }
     )
