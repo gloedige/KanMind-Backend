@@ -12,8 +12,6 @@ class Board(models.Model):
 
     
 class Member(models.Model):
-    # email = models.EmailField(unique=True)
-    # fullname = models.CharField(max_length=255)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=False, null=False)
     board = models.ForeignKey(Board, on_delete=models.CASCADE, blank=False, null=False, related_name='board_members')
 
