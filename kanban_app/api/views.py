@@ -9,7 +9,7 @@ from django.http import Http404
 from rest_framework import serializers, viewsets
 from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
 from ..models import Board, Comment, Task, Member
-from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer, CommentListSerializer
+from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, MemberSerializer, CommentListSerializer
 from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists, checkCommentIdIsValid, checkCommentIdExists
 from django.contrib.auth import get_user_model
 
@@ -39,7 +39,7 @@ class BoardViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Board.objects.filter(Q(owner=user) | Q(members__user=user)).distinct()
+        return Board.objects.filter(Q(owner=user) | Q(board_members__user=user)).distinct()
     
     def get_serializer_class(self):
         if self.action in ['retrieve', 'destroy']:
@@ -119,7 +119,7 @@ class EmailViewSet(viewsets.ModelViewSet):
         - validate_email_address(self, emailToCheck): Validates the provided email address and raises a ValidationError if it is invalid.
     """
     queryset = User.objects.all()
-    serializer_class = EmailListSerializer
+    serializer_class = MemberSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):

@@ -16,9 +16,14 @@ class MemberSerializer(serializers.ModelSerializer):
     fullname : str
         The full name of the member.
     """
+    fullname = serializers.SerializerMethodField()
+    
     class Meta:
-        model = Member
+        model = User
         fields = ['id', 'email', 'fullname']
+
+    def get_fullname(self, obj):
+        return obj.get_username()
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -327,28 +332,6 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ['id','title', 'owner_data', 'members_data', 'members']
-
-
-class EmailListSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the User model used in email list views.
-    Fields
-    ------
-    id : int
-        The unique identifier of the user.
-    email : str
-        The email address of the user.
-    fullname : str
-        The full name of the user.
-    """
-    fullname = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'email', 'fullname']
-
-    def get_fullname(self, obj):
-        return obj.get_username()
 
 
 class CommentListSerializer(serializers.ModelSerializer):
