@@ -217,9 +217,9 @@ class BoardListSerializer(serializers.ModelSerializer):
     tasks_high_prio_count = serializers.SerializerMethodField()
 
     def create(self, validated_data):
-        board = Board.objects.create(**validated_data)
         user_list = validated_data.pop('members', [])
         member_list = self.createMemberFromUserList(user_list)
+        board = Board.objects.create(**validated_data)
         board.members.set(member_list)
         return board
 
