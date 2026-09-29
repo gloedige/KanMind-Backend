@@ -205,7 +205,7 @@ class BoardListSerializer(serializers.ModelSerializer):
         Returns the number of tasks with priority 'high' in the board.
     """
     members = serializers.PrimaryKeyRelatedField(
-        queryset=Member.objects.all(),
+        queryset=User.objects.all(),
         many=True,
         required=True,
         write_only=True
@@ -217,10 +217,18 @@ class BoardListSerializer(serializers.ModelSerializer):
     tasks_high_prio_count = serializers.SerializerMethodField()
 
     def create(self, validated_data):
-        members = validated_data.pop('members', [])
         board = Board.objects.create(**validated_data)
-        board.members.set(members)
+        user_list = validated_data.pop('members', [])
+        member_list = self.createMemberFromUserList(user_list)
+        board.members.set(member_list)
         return board
+
+    def createMemberFromUserList(self, user_list):
+        member_list = []
+        for user in user_list:
+            member, created = Member.objects.get_or_create(user=user, email=user.email, fullname=user.username)
+            member_list.append(member)
+        return member_list
 
     def get_member_count(self, obj):
         return obj.members.count()
