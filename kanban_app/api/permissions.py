@@ -45,7 +45,7 @@ class IsOwnerOrMember(BasePermission):
         return IsOwnerOrMember.is_user_owner_or_member(board, request)
 
     def is_user_owner_or_member(board, request):
-        is_owner_or_member = board.owner_id == request.user.id or board.members.filter(user_id=request.user.id).exists()
+        is_owner_or_member = board.owner_id == request.user.id or board.board_members.filter(user_id=request.user.id).exists()
         if not is_owner_or_member:
             raise PermissionDenied("You are not the owner or a member of this board.")
         return is_owner_or_member
@@ -84,7 +84,7 @@ class IsMemberOfBoard(BasePermission):
         return check_board_existence_by_task_id(task_id)
 
     def is_user_member(self, board, request):
-        is_member = board.members.filter(user_id=request.user.id).exists()
+        is_member = board.board_members.filter(user_id=request.user.id).exists()
         if not is_member:
             raise PermissionDenied("You are not a member of this board.")
         return is_member

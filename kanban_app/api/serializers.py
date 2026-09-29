@@ -143,6 +143,10 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     -------
     get_comments_count(self, obj)
         Returns the number of comments on the task.
+    validate_assignee_id(self, value)
+        Validates that the assignee ID is a valid member of the board.
+    validate_reviewer_id(self, value)
+        Validates that the reviewer ID is a valid member of the board.
     """
     reviewer = MemberSerializer(many=False, read_only=True)
     assignee = MemberSerializer(many=False, read_only=True)
@@ -297,14 +301,20 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         The serialized data of the owner of the board.
     members_data : list of MemberSerializer
         The serialized data of the members associated with the board.
-    members : list of MemberSerializer
+    board_members : list of MemberSerializer
         The list of members associated with the board.
+    Methods
+    -------
+    update(self, instance, validated_data)
+        Updates the board instance with the provided validated data.
+    update_members(self, instance, members_data)
+        Updates the members associated with the board instance.
     """
     owner_data = UserSerializer(source='owner', read_only=True)
     members_data = MemberSerializer(source='members', many=True, read_only=True)
 
     members = serializers.PrimaryKeyRelatedField(
-        queryset=Member.objects.all(),
+        queryset=User.objects.all(),
         many=True,
         required=True,
         write_only=True,
@@ -312,7 +322,7 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
             'does_not_exist': 'At least one of the specified members does not exist.',
             'required': 'This field is required.',
         }
-    )
+    ) 
 
     def validate_members(self, value):
         if not value:
@@ -320,14 +330,33 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         return value
     
     def update(self, instance, validated_data):
-        members = validated_data.pop('members', None)
+        members_data = validated_data.pop('members', None)
+        instance.title = validated_data.get('title', instance.title)
+        instance.save()
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        if members is not None:
-            instance.members.set(members)
-        instance.save()
+         
+        self.update_members(instance, members_data)
+
         return instance
-    
+
+    def update_members(self, instance, members_data):
+        if members_data is not None:
+            new_user = set(members_data)
+            existing_memberships = Member.objects.filter(board=instance)
+            existing_users = set(m.user for m in existing_memberships)
+
+            users_to_remove = existing_users - new_user
+            Member.objects.filter(board=instance, user__in=users_to_remove).delete()
+            
+            users_to_add = new_user - existing_users
+            new_memberships = [
+                Member(board=instance, user_id=user.id) 
+                for user in users_to_add
+                ]
+            Member.objects.bulk_create(new_memberships)
+                   
 
     class Meta:
         model = Board
