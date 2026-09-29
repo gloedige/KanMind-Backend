@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from kanban_app.models import Board, Member, Task, Comment
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class MemberSerializer(serializers.ModelSerializer):
     """
@@ -217,9 +219,10 @@ class BoardListSerializer(serializers.ModelSerializer):
     tasks_high_prio_count = serializers.SerializerMethodField()
 
     def create(self, validated_data):
+        creator = self.context['request'].user
         user_list = validated_data.pop('members', [])
         member_list = self.createMemberFromUserList(user_list)
-        board = Board.objects.create(**validated_data)
+        board = Board.objects.create(owner_id=creator.id, **validated_data)
         board.members.set(member_list)
         return board
 

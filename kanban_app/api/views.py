@@ -8,10 +8,12 @@ from django.core.validators import validate_email
 from django.http import Http404
 from rest_framework import serializers, viewsets
 from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
-from ..models import Board, Comment, Task, User, Member
+from ..models import Board, Comment, Task, Member
 from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, EmailListSerializer, CommentListSerializer
 from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists, checkCommentIdIsValid, checkCommentIdExists
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class BoardViewSet(viewsets.ModelViewSet):
     """
@@ -34,9 +36,6 @@ class BoardViewSet(viewsets.ModelViewSet):
             else:
                 permission_classes = [IsAuthenticated, IsOwnerOrMember]
             return [permission() for permission in permission_classes]
-    
-    def perform_create(self, serializer):
-        serializer.save(owner_id=self.request.user.id)
 
     def get_queryset(self):
         user = self.request.user
