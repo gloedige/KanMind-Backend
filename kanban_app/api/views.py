@@ -83,7 +83,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Task.objects.filter(Q(board__owner=user) | Q(board__members__user=user)).distinct()
+        return Task.objects.filter(Q(board__owner=user) | Q(board__members=user)).distinct()
 
     def get_serializer_class(self):
         if self.action in ['destroy', 'partial_update']:
