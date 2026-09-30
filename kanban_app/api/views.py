@@ -94,7 +94,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def assigned_to_me(self, request, *args, **kwargs):
         member = Member.objects.filter(user_id=request.user.id).first()
         if member:
-            tasks = Task.objects.filter(Q(assignee_id=member.id)).distinct()
+            tasks = Task.objects.filter(Q(assignee_id=member.user_id)).distinct()
             return Response(TaskListSerializer(tasks, many=True).data)
         return Response(TaskListSerializer([], many=True).data)
 
@@ -102,7 +102,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def reviewing(self, request, *args, **kwargs):
         member = Member.objects.filter(user_id=request.user.id).first()
         if member:
-            tasks = Task.objects.filter(Q(reviewer_id=member.id)).distinct()
+            tasks = Task.objects.filter(Q(reviewer_id=member.user_id)).distinct()
 
             return Response(TaskListSerializer(tasks, many=True).data)
         return Response(TaskListSerializer([], many=True).data)
