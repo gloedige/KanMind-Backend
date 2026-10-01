@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from django.http import Http404
 from rest_framework.permissions import SAFE_METHODS
-from kanban_app.models import Board, Task
+from kanban_app.models import Board, Task, Comment
 
 """
 This module contains custom permission classes and helper functions for the Kanban app.
@@ -10,7 +10,8 @@ Methods
 -------
 check_board_existence_by_board_id(board_id)
 check_board_existence_by_task_id(task_id)
-"""
+check_comment_existence_by_comment_id(comment_id)
+check_task_existence_by_task_id(task_id)"""
 
 def check_board_existence_by_board_id(board_id):
         try:
@@ -25,6 +26,21 @@ def check_board_existence_by_task_id(task_id):
     except Task.DoesNotExist:
         raise Http404("Task not found!")
     return board
+
+def check_comment_existence_by_comment_id(comment_id):
+    try:
+        comment = Comment.objects.get(pk=comment_id)
+    except Comment.DoesNotExist:
+        raise Http404("Comment not found!")
+    return comment
+
+def check_task_existence_by_task_id(task_id):
+    try:
+        task = Task.objects.get(pk=task_id)
+    except Task.DoesNotExist:
+        raise Http404("Task not found!")
+    return task
+
 
 class IsOwnerOrMember(BasePermission):
     """
@@ -89,7 +105,7 @@ class IsMemberOfBoard(BasePermission):
             raise PermissionDenied("You are not a member of this board.")
         return is_member
 
-class IsOwnerForDestroy(BasePermission):
+class IsOwnerOfBoardForDestroy(BasePermission):
     """
     Permission class to check if the user is the owner of the board for destroy action.
     Methods
@@ -99,8 +115,6 @@ class IsOwnerForDestroy(BasePermission):
     is_user_owner(board, request)
         Checks if the user is the owner of the given board.
     -------
-    has_object_permission(self, request, view, obj)
-        Checks if the user has permission to delete the board based on ownership.
     """
 
     def has_permission(self, request, view):
@@ -116,6 +130,31 @@ class IsOwnerForDestroy(BasePermission):
             if not is_owner:
                 raise PermissionDenied("You are not the owner of this board.")
             return is_owner
+
+class IsOwnerOfCommentForDestroy(BasePermission):
+    """
+    Permission class to check if the user is the owner of the comment for destroy action.
+    Methods
+    -------
+    has_permission(self, request, view)
+        Checks if the user has permission to destroy the comment based on ownership.
+    is_user_comment_owner(comment, request)
+        Checks if the user is the owner of the given comment.
+    """
+
+    def has_permission(self, request, view):
+            comment_id = view.kwargs.get('pk')
+            if comment_id is None:
+                return True
+            
+            comment = check_comment_existence_by_comment_id(comment_id)
+            return self.is_user_comment_owner(comment, request)
+
+    def is_user_comment_owner(self, comment, request):
+            is_owner = comment.author == request.user.username
+            if not is_owner:
+                raise PermissionDenied("You are not the owner of this comment.")
+            return is_owner
      
 
 class IsOwnerOfTaskOrBoardForDestroy(BasePermission):
@@ -123,13 +162,21 @@ class IsOwnerOfTaskOrBoardForDestroy(BasePermission):
     Permission class to check if the user is the owner of the task or board for destroy action.
     Methods
     -------
-    has_object_permission(self, request, view, obj)
-        Checks if the user has permission to delete the task or board based on ownership.
+    has_permission(self, request, view)
+        Checks if the user has permission to destroy the task based on ownership of the task or its board.
+    is_user_task_or_board_owner(task, request)
+        Checks if the user is the owner of the given task or its board.
     """
-    def has_object_permission(self, request, view, obj):
-        if view.action == 'destroy':
-            if hasattr(obj, 'owner_id') and obj.owner_id != request.user.id:
-                raise PermissionDenied("You are not the owner of this object.")
-            return hasattr(obj, 'owner_id') and obj.owner_id == request.user.id
+    def has_permission(self, request, view):
+            task_id = view.kwargs.get('pk')
+            if task_id is None:
+                return True
+            
+            task = check_task_existence_by_task_id(task_id)
+            return self.is_user_task_or_board_owner(task, request)
 
-        return True
+    def is_user_task_or_board_owner(self, task, request):
+            is_owner = task.owner_id == request.user.id or task.board.owner_id == request.user.id
+            if not is_owner:
+                raise PermissionDenied("You are not the owner of this task or its board.")
+            return is_owner
