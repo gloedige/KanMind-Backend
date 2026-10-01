@@ -1,5 +1,6 @@
 from rest_framework.decorators import action
-from rest_framework import routers, viewsets
+from rest_framework import status, viewsets
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
@@ -9,7 +10,7 @@ from django.http import Http404
 from rest_framework import serializers, viewsets
 from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
 from ..models import Board, Comment, Task, Member
-from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, MemberSerializer, CommentListSerializer
+from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, MemberSerializer, CommentListSerializer, UserSerializer
 from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists, checkCommentIdIsValid, checkCommentIdExists
 from django.contrib.auth import get_user_model
 
@@ -108,7 +109,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Response(TaskListSerializer([], many=True).data)
     
 
-class EmailViewSet(viewsets.ModelViewSet):
+class EmailViewSet(APIView):
     """
     ViewSet for managing emails.
     Provides CRUD operations for emails.
@@ -122,17 +123,17 @@ class EmailViewSet(viewsets.ModelViewSet):
     serializer_class = MemberSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         email = self.request.query_params.get('email', None)
         validated_email = None
-        filtered_email = None
+        user_by_email = None
         if email:
             validated_email = self.validate_email_address(email).lower()
-        
-        filtered_email = User.objects.filter(email=validated_email)
-        if not filtered_email.exists():
-            raise Http404("Email not found.")
-        return filtered_email
+        try:
+            user_by_email = User.objects.get(email=validated_email)
+            return Response(MemberSerializer(user_by_email, many=False).data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'detail': 'User with this email not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def validate_email_address(self, emailToCheck):
         if emailToCheck is None or emailToCheck.strip() == '':
