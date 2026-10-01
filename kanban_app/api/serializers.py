@@ -310,7 +310,7 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
     update_members(self, instance, members_data)
         Updates the members associated with the board instance.
     """
-    owner_data = UserSerializer(source='owner', read_only=True)
+    owner_data = MemberSerializer(source='owner', read_only=True)
     members_data = MemberSerializer(source='members', many=True, read_only=True)
 
     members = serializers.PrimaryKeyRelatedField(
