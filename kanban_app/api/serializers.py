@@ -20,7 +20,7 @@ class MemberSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'email', 'fullname']
+        fields = ('id', 'email', 'fullname')
 
     def get_fullname(self, obj):
         return obj.get_username()
@@ -39,7 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ('id', 'username', 'email')
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -107,7 +107,7 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ['id', 'board', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'owner_id', 'due_date', 'comments_count']
+        fields = ('id', 'board', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'owner_id', 'due_date', 'comments_count')
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):
@@ -181,7 +181,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'owner_id', 'due_date']
+        fields = ('id', 'title', 'description', 'status', 'priority', 'assignee', 'assignee_id', 'reviewer', 'reviewer_id', 'owner_id', 'due_date')
 
 class BoardListSerializer(serializers.ModelSerializer):
     """
@@ -263,7 +263,7 @@ class BoardListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ['id', 'title', 'members', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count', 'owner_id']
+        fields = ('id', 'title', 'members', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count', 'owner_id')
 
 
 class BoardDetailSerializer(serializers.ModelSerializer):
@@ -286,7 +286,7 @@ class BoardDetailSerializer(serializers.ModelSerializer):
     tasks = TaskDetailSerializer(many=True, read_only=True)
     class Meta:
         model = Board
-        fields = ['id', 'title', 'owner_id', 'members', 'tasks']
+        fields = ('id', 'title', 'owner_id', 'members', 'tasks')
 
 class BoardUpdateSerializer(serializers.ModelSerializer):
     """
@@ -360,7 +360,7 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ['id','title', 'owner_data', 'members_data', 'members']
+        fields = ('id','title', 'owner_data', 'members_data', 'members')
 
 
 class CommentListSerializer(serializers.ModelSerializer):
@@ -382,6 +382,6 @@ class CommentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'created_at', 'author', 'content']
+        fields = ('id', 'created_at', 'author', 'content')
 
     
