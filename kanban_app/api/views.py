@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from kanban_app.utils import checkCommentIdExists, checkCommentIdIsValid, checkTaskIdExists, checkTaskIdIsValid, checkBoardIdExists, checkBoardIdIsValid
+from kanban_app.utils import checkCommentIdExists, checkCommentIdIsValid, checkTaskIdExists, checkIdIsValid, checkBoardIdExists
 
 from ..models import Board, Comment, Member, Task
 from .permissions import IsMemberOfBoard, IsOwnerForDestroy, IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember
@@ -58,7 +58,7 @@ class BoardViewSet(viewsets.ModelViewSet):
         if self.action not in ['retrieve', 'destroy', 'update', 'partial_update']:
             return
         self.board_id = self.kwargs.get('pk', None)
-        if not checkBoardIdIsValid(self, self.board_id):
+        if not checkIdIsValid(self, self.board_id):
             raise ValidationError({"error": "Invalid board ID."})
         if not checkBoardIdExists(self, self.board_id):
                 raise Http404({"error": "Board ID does not exist."})
@@ -84,7 +84,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def initial(self, request, *args, **kwargs):
         if self.action in ['destroy', 'partial_update']:
             task_id = self.kwargs.get('pk', None)
-            if not checkTaskIdIsValid(self, task_id):
+            if not checkIdIsValid(self, task_id):
                 raise ValidationError({"error": "Invalid task ID."})
             if not checkTaskIdExists(self, task_id):
                 raise Http404({"error": "Task ID does not exist."})
@@ -190,7 +190,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def _validate_task_context(self):
         self.task_id = self.kwargs.get('task_pk', None)
-        if not checkTaskIdIsValid(self, self.task_id):
+        if not checkIdIsValid(self, self.task_id):
             raise ValidationError({"error": "Invalid task ID."})
         if not checkTaskIdExists(self, self.task_id):
             raise Http404({"error": "Task ID does not exist."})
