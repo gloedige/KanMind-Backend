@@ -15,6 +15,10 @@ class MemberSerializer(serializers.ModelSerializer):
         The email address of the member.
     fullname : str
         The full name of the member.
+    Methods
+    -------
+    get_fullname(self, obj)
+        Returns the full name of the member.
     """
     fullname = serializers.SerializerMethodField()
     
@@ -75,6 +79,10 @@ class TaskListSerializer(serializers.ModelSerializer):
         The number of comments on the task.
     Methods
     -------
+    validate_assignee_id(self, value)
+        Validates that the assignee ID is a valid member of the board.
+    validate_reviewer_id(self, value)
+        Validates that the reviewer ID is a valid member of the board.
     get_comments_count(self, obj)
         Returns the number of comments on the task.
     """
@@ -141,12 +149,12 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         The number of comments on the task.
     Methods
     -------
-    get_comments_count(self, obj)
-        Returns the number of comments on the task.
     validate_assignee_id(self, value)
         Validates that the assignee ID is a valid member of the board.
     validate_reviewer_id(self, value)
         Validates that the reviewer ID is a valid member of the board.
+    update(self, instance, validated_data)
+        Updates the task instance with the validated data, including handling changes to assignee and reviewer IDs.
     """
     reviewer = MemberSerializer(many=False, read_only=True)
     assignee = MemberSerializer(many=False, read_only=True)
@@ -163,9 +171,6 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         if value is not None and not Task.objects.get(pk=self.instance.pk).board.members.filter(id=value).exists():
             raise serializers.ValidationError("Reviewer must be a valid member of the board.")
         return value
-
-    def get_comments_count(self, obj):
-        return obj.comments.count()
 
     def update(self, instance, validated_data):
         new_assignee_id = validated_data.pop('assignee_id', None)
@@ -206,10 +211,18 @@ class BoardListSerializer(serializers.ModelSerializer):
         The ID of the owner of the board.
     Methods
     -------
+    create(self, validated_data)
+        Creates a new board instance with the specified members.
+    validate_members(self, value)
+        Validates the members field to ensure at least one member is provided.
     get_member_count(self, obj)
         Returns the number of members in the board.
     get_ticket_count(self, obj)
         Returns the number of tasks in the board.
+    get_tasks_to_do_count(self, obj)
+        Returns the number of tasks with status 'to_do' in the board.
+    get_tasks_high_prio_count(self, obj)
+        Returns the number of tasks with priority 'high' in the board.
     get_tasks_to_do_count(self, obj)
         Returns the number of tasks with status 'to_do' in the board.
     get_tasks_high_prio_count(self, obj)
@@ -305,6 +318,8 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
         The list of members associated with the board.
     Methods
     -------
+    validate_members(self, value)
+        Validates the members field to ensure at least one member is provided.
     update(self, instance, validated_data)
         Updates the board instance with the provided validated data.
     update_members(self, instance, members_data)

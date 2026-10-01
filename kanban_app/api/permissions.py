@@ -74,8 +74,8 @@ class IsMemberOfBoard(BasePermission):
     -------
     has_permission(self, request, view)
         Checks if the user has permission to access the board based on membership.
-    check_board_existence(board_id)
-        Checks if the board with the given ID exists and returns it.
+    get_board_from_view(request, view)
+        Retrieves the board instance based on the request data and view context.
     is_user_member(board, request)
         Checks if the user is a member of the given board.
     """

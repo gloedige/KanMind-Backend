@@ -12,8 +12,10 @@ class RegisterView(APIView):
     Handles user registration.
 
     Methods:
-        post(self, request): Handles POST requests for user registration.
-        check_and_save(self, serializer): Validates and saves the user, returning a response with the token and user details.
+    ------
+        - post(self, request): Handles POST requests for user registration.
+        - check_and_save(self, serializer): Validates and saves the user, returning a response with the token and user details.
+    
     permission_classes = [AllowAny]
 
     """
@@ -42,7 +44,7 @@ class CustomLoginView(ObtainAuthToken):
     Handles user login.
 
     Methods:
-        post(self, request): Handles POST requests for user login.
+        - post(self, request): Handles POST requests for user login.
     """
     permission_classes = [AllowAny]
 

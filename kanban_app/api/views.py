@@ -25,9 +25,11 @@ class BoardViewSet(viewsets.ModelViewSet):
         - IsAuthenticated: User must be authenticated.
         - IsOwnerOrMember: User must be the owner or a member of the board.
     Methods:
-        - perform_create(self, serializer): Sets the owner of the board to the current user upon creation.
+        - initial(self, request, *args, **kwargs): Validates the board ID before processing the request.
+        - get_permissions(self): Returns the list of permission classes for the current action.
         - get_queryset(self): Returns the queryset of boards the user owns or is a member of.
         - get_serializer_class(self): Returns the appropriate serializer class based on the action.
+        - _validate_board_id(self): Validates the board ID for actions that require it.
     """
     queryset = Board.objects.all()
     serializer_class = BoardListSerializer
@@ -71,11 +73,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     Permissions:
         - IsMemberOfBoard: User must be a member of the board to perform actions on tasks.
     Methods:
+        - initial(self, request, *args, **kwargs): Validates the task ID before processing the request.
+        - get_permissions(self): Returns the list of permission classes for the current action.
         - perform_create(self, serializer): Sets the assignee and reviewer of the task upon creation.
         - get_queryset(self): Returns the queryset of tasks for the specified board and user.
         - get_serializer_class(self): Returns the appropriate serializer class based on the action.
-        - check_is_member_of_board(self): Checks if the assignee is a member of the board and raises a ValidationError if not.
         - assigned_to_me(self, request, *args, **kwargs): Returns the tasks assigned to the current user.
+        - reviewing(self, request, *args, **kwargs): Returns the tasks reviewed by the current user.
     """
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
@@ -136,7 +140,7 @@ class EmailDetailView(APIView):
     Permissions:
         - IsAuthenticated: User must be authenticated.
     Methods:
-        - get_queryset(self): Returns the queryset of users filtered by the validated email address.
+        - get(self, request, *args, **kwargs): Retrieves the user associated with the provided email address.
         - validate_email_address(self, emailToCheck): Validates the provided email address and raises a ValidationError if it is invalid.
     """
     queryset = User.objects.all()
@@ -171,10 +175,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     Permissions:
         - IsMemberOfBoard: User must be a member of the board associated with the task.
     Methods:
-        - _validate_comment_context_for_destroy(self): Validates the comment context for the destroy action, ensuring the comment ID is valid and exists.
-        - _validate_task_context(self): Validates the task context, ensuring the task ID is valid and exists.
         - get_permissions(self): Returns the appropriate permission classes based on the action.
         - initial(self, request, *args, **kwargs): Validates the task and comment context before processing the request.
+        - _validate_task_context(self): Validates the task context, ensuring the task ID is valid and exists.
+        - _validate_comment_context_for_destroy(self): Validates the comment context for the destroy action, ensuring the comment ID is valid and exists.
         - get_queryset(self): Returns the queryset of comments filtered by the task ID.
         - perform_create(self, serializer): Saves a new comment with the author set to the current user and the task ID set to the associated task.
 
