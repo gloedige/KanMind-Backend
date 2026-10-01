@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from kanban_app.utils import checkCommentIdExists, checkCommentIdIsValid, checkTaskIdExists, checkIdIsValid, checkBoardIdExists
 
 from ..models import Board, Comment, Member, Task
-from .permissions import IsMemberOfBoard, IsOwnerForDestroy, IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember
+from .permissions import IsMemberOfBoard, IsOwnerOfBoardForDestroy, IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsOwnerOfCommentForDestroy
 from .serializers import BoardDetailSerializer, BoardListSerializer, BoardUpdateSerializer, CommentListSerializer, MemberSerializer, TaskDetailSerializer, TaskListSerializer
 
 User = get_user_model()
@@ -38,7 +38,7 @@ class BoardViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
             if self.action == 'destroy':
-                permission_classes = [IsAuthenticated, IsOwnerForDestroy]
+                permission_classes = [IsAuthenticated, IsOwnerOfBoardForDestroy]
             else:
                 permission_classes = [IsAuthenticated, IsOwnerOrMember]
             return [permission() for permission in permission_classes]
@@ -79,7 +79,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     queryset = Task.objects.all()
     serializer_class = TaskListSerializer
-    permission_classes = [IsAuthenticated, IsMemberOfBoard, IsOwnerOfTaskOrBoardForDestroy]
 
     def initial(self, request, *args, **kwargs):
         if self.action in ['destroy', 'partial_update']:
@@ -89,6 +88,13 @@ class TaskViewSet(viewsets.ModelViewSet):
             if not checkTaskIdExists(self, task_id):
                 raise Http404({"error": "Task ID does not exist."})
         super().initial(request, *args, **kwargs)
+
+    def get_permissions(self):
+            if self.action == 'destroy':
+                permission_classes = [IsAuthenticated, IsOwnerOfTaskOrBoardForDestroy]
+            else:
+                permission_classes = [IsAuthenticated, IsMemberOfBoard]
+            return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer):
         assignee_id = self.request.data.get('assignee_id', None)
@@ -178,7 +184,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'destroy':
-            permission_classes = [IsAuthenticated, IsOwnerForDestroy]
+            permission_classes = [IsAuthenticated, IsOwnerOfCommentForDestroy]
         else:
             permission_classes = [IsAuthenticated, IsMemberOfBoard]
         return [permission() for permission in permission_classes]
