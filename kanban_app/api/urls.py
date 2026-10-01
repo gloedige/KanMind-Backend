@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import BoardViewSet, TaskViewSet, EmailViewSet, CommentViewSet
+from .views import BoardViewSet, TaskViewSet, EmailDetailView, CommentViewSet
 from rest_framework import routers
 from rest_framework_nested import routers
 
@@ -13,6 +13,6 @@ tasks_router.register(r'comments', CommentViewSet, basename='task-comments')
 urlpatterns = [
     path('', include(router.urls), name='boards_list'),
     path('', include(router.urls), name='tasks_list'),
-    path('email-check/', EmailViewSet.as_view(), name='email-check'),
+    path('email-check/', EmailDetailView.as_view(), name='email-check'),
     path('', include(tasks_router.urls), name='task-comments'),
 ]

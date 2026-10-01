@@ -109,7 +109,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Response(TaskListSerializer([], many=True).data)
     
 
-class EmailViewSet(APIView):
+class EmailDetailView(APIView):
     """
     ViewSet for managing emails.
     Provides CRUD operations for emails.
