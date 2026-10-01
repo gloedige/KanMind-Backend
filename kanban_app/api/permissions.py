@@ -42,9 +42,9 @@ class IsOwnerOrMember(BasePermission):
             return True
         
         board = check_board_existence_by_board_id(board_id)
-        return IsOwnerOrMember.is_user_owner_or_member(board, request)
+        return self.is_user_owner_or_member(board, request)
 
-    def is_user_owner_or_member(board, request):
+    def is_user_owner_or_member(self, board, request):
         is_owner_or_member = board.owner_id == request.user.id or board.board_members.filter(user_id=request.user.id).exists()
         if not is_owner_or_member:
             raise PermissionDenied("You are not the owner or a member of this board.")
@@ -90,28 +90,32 @@ class IsMemberOfBoard(BasePermission):
         return is_member
 
 class IsOwnerForDestroy(BasePermission):
-     """
-     Permission class to check if the user is the owner of the board for destroy action.
-     Methods
-     -------
-     has_permission(self, request, view)
-         Checks if the user has permission to destroy the board based on ownership.
-     is_user_owner(board, request)
-         Checks if the user is the owner of the given board.
-     -------
-     has_object_permission(self, request, view, obj)
-         Checks if the user has permission to delete the board based on ownership.
-     """
-     def has_object_permission(self, request, view, obj):        
-        if hasattr(obj, 'owner_id'):
-            if obj.owner_id != request.user.id:
+    """
+    Permission class to check if the user is the owner of the board for destroy action.
+    Methods
+    -------
+    has_permission(self, request, view)
+        Checks if the user has permission to destroy the board based on ownership.
+    is_user_owner(board, request)
+        Checks if the user is the owner of the given board.
+    -------
+    has_object_permission(self, request, view, obj)
+        Checks if the user has permission to delete the board based on ownership.
+    """
+
+    def has_permission(self, request, view):
+            board_id = view.kwargs.get('pk')
+            if board_id is None:
+                return True
+            
+            board = check_board_existence_by_board_id(board_id)
+            return self.is_user_owner(board, request)
+
+    def is_user_owner(self, board, request):
+            is_owner = board.owner_id == request.user.id
+            if not is_owner:
                 raise PermissionDenied("You are not the owner of this board.")
-            return obj.owner_id == request.user.id
-        if hasattr(obj, 'author'):
-            if obj.author != request.user.username:
-                raise PermissionDenied("You are not the author of this board.")
-            return obj.author == request.user.username
-        return True
+            return is_owner
      
 
 class IsOwnerOfTaskOrBoardForDestroy(BasePermission):
