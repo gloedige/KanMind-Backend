@@ -10,48 +10,62 @@ class RegistrationSerializer(serializers.ModelSerializer):
     Ensures that the email is unique.
     Methods
     -------
+    validate_email(self, value)
+        Validates that the email is unique.
+    validate_fullname(self, value)
+        Validates that the fullname (stored as username) is unique.
+    validate_repeated_password(self, value)
+        Validates that the repeated password matches the original password.
     save(self, **kwargs)
         Creates and returns a new user instance after validating the data.
-    validate_fullname(self, value)
-        Validates the fullname field to ensure it contains a space.
     """
-    repeated_password = serializers.CharField(write_only=True)
-    fullname = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True, max_length=255)
+    fullname = serializers.CharField(required=True, max_length=150)
+    password = serializers.CharField(write_only=True, max_length=128)
+    repeated_password = serializers.CharField(write_only=True, max_length=128)
 
     class Meta:
         model = User
         fields = ('fullname', 'email', 'password', 'repeated_password')
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'fullname': {'required': True},
-            'email': {'required': True},
-        }
+
+    def validate_email(self, value):
+        """
+        Validates that the email is unique.
+        """
+        value = value.lower()
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email is already in use.")
+        return value
+
+    def validate_fullname(self, value):
+        """
+        Validates that the fullname (stored as username) is unique.
+        """
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("This fullname is already in use.")
+        return value
+    
+    def validate(self, data):
+        """
+        Validates that the repeated password matches the original password.
+        """
+        password = data.get('password')
+        if password != data.get('repeated_password'):
+            raise serializers.ValidationError("Passwords must match.")
+        return data
 
     def save(self, **kwargs):
-        password = self.validated_data['password']
-        repeated_password = self.validated_data['repeated_password']
-        self.validated_data['email'] = self.validated_data['email'].lower()
-
-        if password != repeated_password:
-            raise serializers.ValidationError({"password": "Passwords must match."})
-       
-        if User.objects.filter(email=self.validated_data['email']).exists():
-            raise serializers.ValidationError("Email is already in use.")
-
+        validated_data = self.validated_data
         user = User(
-            username=self.validated_data['fullname'],
-            email=self.validated_data['email']
+            username=validated_data['fullname'],
+            email=validated_data['email']
         )
      
-        user.set_password(password)
+        user.set_password(validated_data['password'])
         user.save()
         return user
 
 
-    def validate_fullname(self, value):
-        if " " in value:
-            return value
-        return value
 
 class LoginSerializer(serializers.ModelSerializer):
     """
