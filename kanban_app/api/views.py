@@ -1,18 +1,19 @@
-from rest_framework.decorators import action
-from rest_framework import status, viewsets
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
-from django.db.models import Q
-from django.core.validators import validate_email
-from django.http import Http404
-from rest_framework import serializers, viewsets
-from .permissions import IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember, IsMemberOfBoard, IsOwnerForDestroy
-from ..models import Board, Comment, Task, Member
-from .serializers import BoardListSerializer, BoardDetailSerializer, BoardUpdateSerializer, TaskDetailSerializer, TaskListSerializer, MemberSerializer, CommentListSerializer, UserSerializer
-from kanban_app.utils import checkTaskIdIsValid, checkTaskIdExists, checkCommentIdIsValid, checkCommentIdExists
 from django.contrib.auth import get_user_model
+from django.core.validators import validate_email
+from django.db.models import Q
+from django.http import Http404
+from rest_framework import serializers, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from kanban_app.utils import checkCommentIdExists, checkCommentIdIsValid, checkTaskIdExists, checkTaskIdIsValid, checkBoardIdExists, checkBoardIdIsValid
+
+from ..models import Board, Comment, Member, Task
+from .permissions import IsMemberOfBoard, IsOwnerForDestroy, IsOwnerOfTaskOrBoardForDestroy, IsOwnerOrMember
+from .serializers import BoardDetailSerializer, BoardListSerializer, BoardUpdateSerializer, CommentListSerializer, MemberSerializer, TaskDetailSerializer, TaskListSerializer
 
 User = get_user_model()
 
@@ -31,6 +32,10 @@ class BoardViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()
     serializer_class = BoardListSerializer
 
+    def initial(self, request, *args, **kwargs):
+            self._validate_board_id()
+            super().initial(request, *args, **kwargs)
+    
     def get_permissions(self):
             if self.action == 'destroy':
                 permission_classes = [IsAuthenticated, IsOwnerForDestroy]
@@ -48,6 +53,15 @@ class BoardViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'partial_update']:
             return BoardUpdateSerializer
         return BoardListSerializer
+
+    def _validate_board_id(self):
+        if self.action not in ['retrieve', 'destroy', 'update', 'partial_update']:
+            return
+        self.board_id = self.kwargs.get('pk', None)
+        if not checkBoardIdIsValid(self, self.board_id):
+            raise ValidationError({"error": "Invalid board ID."})
+        if not checkBoardIdExists(self, self.board_id):
+                raise Http404({"error": "Board ID does not exist."})
     
 
 class TaskViewSet(viewsets.ModelViewSet):
