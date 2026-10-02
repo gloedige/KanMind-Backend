@@ -9,18 +9,14 @@ from auth_app.utils import create_user_object
 
 class RegisterView(APIView):
     """
-    Handles user registration.
-
-    Methods:
-    ------
-        - post(self, request): Handles POST requests for user registration.
-        - check_and_save(self, serializer): Validates and saves the user, returning a response with the token and user details.
-    
-    permission_classes = [AllowAny]
-
+    Handles the registration process by validating the provided data and creating a new user instance.
     """
     permission_classes = [AllowAny]
     def post(self, request):
+        """
+        Handles POST requests for user registration.
+        Validates the provided data and creates a new user instance if valid.
+        """
         serializer = RegistrationSerializer(data=request.data)
 
         try:
@@ -33,22 +29,28 @@ class RegisterView(APIView):
         
 
     def check_and_save(self, serializer):
-            serializer.is_valid(raise_exception=True)
-            save_account = serializer.save()
-            data = create_user_object(save_account)
-            return Response(data, status=status.HTTP_201_CREATED)
+        """
+        Validates the serializer and saves the user instance if valid.
+        Returns a response with the created user's data.
+        """
+        serializer.is_valid(raise_exception=True)
+        save_account = serializer.save()
+        data = create_user_object(save_account)
+        return Response(data, status=status.HTTP_201_CREATED)
         
 
 class CustomLoginView(ObtainAuthToken):
     """
-    Handles user login.
-
-    Methods:
-        - post(self, request): Handles POST requests for user login.
+    Handles user login by validating the provided email and password.
+    Returns the user's data if the credentials are correct.
     """
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Handles POST requests for user login.
+        Validates the provided email and password and returns the user's data if valid.
+        """
         serializer = LoginSerializer(data=request.data)
 
         data = {}
@@ -65,14 +67,16 @@ class CustomLoginView(ObtainAuthToken):
 
 class LogoutView(APIView):
     """
-    Handles user logout.
-
-    Methods:
-        post(self, request): Handles POST requests for user logout.
+    Handles user logout by deleting the user's authentication token.
+    Returns a success message upon successful logout.
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Handles POST requests for user logout.
+        Deletes the user's authentication token and returns a success message.
+        """
         request.user.auth_token.delete()  # Token löschen
         return Response({"detail": "Logout successful. Token was deleted."}, status=status.HTTP_200_OK)
 

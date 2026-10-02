@@ -6,18 +6,7 @@ User = get_user_model()
 class RegistrationSerializer(serializers.ModelSerializer):
     """
     Serializer for user registration.
-    Validates that the repeated password matches the original password.
-    Ensures that the email is unique.
-    Methods
-    -------
-    validate_email(self, value)
-        Validates that the email is unique.
-    validate_fullname(self, value)
-        Validates that the fullname (stored as username) is unique.
-    validate_repeated_password(self, value)
-        Validates that the repeated password matches the original password.
-    save(self, **kwargs)
-        Creates and returns a new user instance after validating the data.
+    Handles user registration by validating the provided data and creating a new user instance.
     """
     email = serializers.EmailField(required=True, max_length=255)
     fullname = serializers.CharField(required=True, max_length=150)
@@ -55,6 +44,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return data
 
     def save(self, **kwargs):
+        """
+        Creates and returns a new user instance after validating the data.
+        """
         validated_data = self.validated_data
         user = User(
             username=validated_data['fullname'],
@@ -71,10 +63,6 @@ class LoginSerializer(serializers.ModelSerializer):
     """
     Serializer for user login.
     Validates that the provided email and password are correct.
-    Methods
-    -------
-    validate(self, data)
-        Validates the email and password combination.
     """
     email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, required=True)
@@ -84,6 +72,9 @@ class LoginSerializer(serializers.ModelSerializer):
         fields = ('email', 'password')
 
     def validate(self, data):
+        """
+        Validates the email and password combination.
+        """
         email = data.get('email')
         password = data.get('password')
 
