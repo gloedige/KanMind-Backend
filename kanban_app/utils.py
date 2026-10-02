@@ -1,30 +1,29 @@
 from kanban_app.models import Task, Comment, Board
 """
 Utility functions for task, comment, and board validation.
-Functions:
-    - checkTaskIdIsValid(self, task_id): Checks if the provided task ID is valid (not None and is a digit).
-    - checkTaskIdExists(self, task_id): Checks if a task with the provided ID exists in the database.
-    - checkCommentIdIsValid(self, comment_id): Checks if the provided comment ID is valid (not None and is a digit).
-    - checkCommentIdExists(self, comment_id): Checks if a comment with the provided ID exists in the database.
-    - checkBoardIdIsValid(self, board_id): Checks if the provided board ID is valid (not None and is a digit).
-    - checkBoardIdExists(self, board_id): Checks if a board with the provided ID exists in the database.
 """
+def checkIdIsValid(id):
+        """
+        Checks if the provided ID is valid (not None and is a digit).
+        """
+        id_not_none = id is not None
+        id_is_digit = str(id).isdigit()
+        return id_not_none and id_is_digit
 
-def checkIdIsValid(self, task_id):
-        task_id_not_none = task_id is not None
-        task_id_is_digit = str(task_id).isdigit()
-        return task_id_not_none and task_id_is_digit
+def checkTaskIdExists(task_id):
+        """
+        Checks if a task with the provided ID exists in the database.
+        """
+        return Task.objects.filter(id=task_id).exists()
 
-def checkTaskIdExists(self, task_id):
-    return Task.objects.filter(id=task_id).exists()
+def checkCommentIdExists(comment_id):
+        """
+        Checks if a comment with the provided ID exists in the database.
+        """
+        return Comment.objects.filter(id=comment_id).exists()
 
-def checkCommentIdIsValid(self, comment_id):
-        comment_id_not_none = comment_id is not None
-        comment_id_is_digit = str(comment_id).isdigit()
-        return comment_id_not_none and comment_id_is_digit
-
-def checkCommentIdExists(self, comment_id):
-    return Comment.objects.filter(id=comment_id).exists()
-
-def checkBoardIdExists(self, board_id):
-    return Board.objects.filter(id=board_id).exists()
+def checkBoardIdExists(board_id):
+        """
+        Checks if a board with the provided ID exists in the database.
+        """
+        return Board.objects.filter(id=board_id).exists()

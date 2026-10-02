@@ -2,6 +2,9 @@ from django.db import models
 from core import settings
 
 class Board(models.Model):
+    """
+    Represents a Kanban board.
+    """
     title = models.CharField(max_length=255)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_boards')
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Member', blank=True, related_name='boards')
@@ -11,6 +14,9 @@ class Board(models.Model):
 
     
 class Member(models.Model):
+    """
+    Represents a member of a Kanban board.
+    """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=False, null=False)
     board = models.ForeignKey(Board, on_delete=models.CASCADE, blank=False, null=False, related_name='board_members')
 
@@ -22,6 +28,9 @@ class Member(models.Model):
 
 
 class Task(models.Model):
+    """
+    Represents a task within a Kanban board.
+    """
     board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -37,6 +46,9 @@ class Task(models.Model):
 
 
 class Comment(models.Model):
+    """
+    Represents a comment on a task within a Kanban board.
+    """
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.CharField(max_length=30)
     content = models.TextField()
